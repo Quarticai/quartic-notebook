@@ -34,13 +34,47 @@ body > #header {
         padding-bottom: 5px;
         padding-top: 5px;
         .border-box-sizing();
+        width: 100%;
+        background-color: #222;
     }
 
     .header-bar {
         width: 100%;
-        height: 1px;
-        background: @navbar-default-border;
-        margin-bottom: -1px;
+        background: white;
+        .box-shadow(@global-shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+    }
+
+    .header-bar-breadcrumb { 
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .header-bar-code-editor { 
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: bold;
+    }
+
+    .header-bar-btn {
+        background-color: #EFEFEF;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .header-bar-btn span {
+        font-size: 16px;
+        margin-left: 10px;
+    }
+
+    .header-bar-btn .fa {
+        color: @primary_color;
     }
 
     @media print {
@@ -61,6 +95,7 @@ body > #header {
     padding-left: 0px;
     padding-top: (@navbar-height - @logo_height) / 2;
     padding-bottom: (@navbar-height - @logo_height) / 2;
+    margin-right: auto;
 }
 
 [dir="rtl"] #ipython_notebook {
@@ -94,7 +129,7 @@ body > #header {
     width: 100%;
     display: none;
     .border-box-sizing();
-    overflow: auto;
+    overflow: auto; // scrolls the ipython-app
     @media print {
       // force auto-height on print (overrides manual resizing in live view)
       height: auto !important;
@@ -113,10 +148,12 @@ input.ui-button {
 
 span#kernel_logo_widget {
     margin: 0 10px;
+    display: none;
 }
 
 span#login_widget {
     float: right;
+    display: none;
 }
 
 [dir="rtl"] span#login_widget {
@@ -185,4 +222,8 @@ span#login_widget > .button,
 
 [dir="rtl"] .fa-step-forward::before {
     content: "\f048";
+}
+
+#header-container .navbar-btn.btn-sm {
+    display: none;
 }
