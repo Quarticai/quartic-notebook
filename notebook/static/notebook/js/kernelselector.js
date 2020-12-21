@@ -61,6 +61,7 @@ define([
         var that = this;
         this.kernelspecs = data.kernelspecs;
         var change_kernel_submenu = $("#menu-change-kernel-submenu");
+        var change_select_kernel_menu = $("#change_kernel_type")
         var new_notebook_submenu = $("#menu-new-notebook-submenu");
         var keys = _sorted_names(data.kernelspecs);
         
@@ -77,6 +78,15 @@ define([
                         .text(ks.spec.display_name)
                 )
             );
+
+            change_select_kernel_menu.append(
+                $("<option>").attr("id", "kernel-selectmenu-"+ks.name)
+                    .click( function () {
+                        that.set_kernel(ks.name);
+                    })
+                    .text(ks.spec.display_name)
+            )
+            
             // Create the File > New Notebook submenu
             new_notebook_submenu.append(
                 $("<li>").attr("id", "new-notebook-submenu-"+ks.name).append(
@@ -88,6 +98,14 @@ define([
                         .text(ks.spec.display_name)
                 )
             );
+
+            new_notebook_submenu.append(
+                $("<option>").attr("id", "kernel-selectmenu-"+ks.name)
+                    .click( function () {
+                        that.new_notebook(ks.name);
+                    })
+                    .text(ks.spec.display_name)
+            )
 
         });
         // trigger loaded promise
