@@ -78,6 +78,8 @@ define(function() {
     var sidebar_btn = document.getElementById('checkbox-sidebar')
     var dropdown_label = document.getElementById('checkbox-custom-label')
     var sidebar_label = document.getElementById('sidebar-label')
+    var dropdown_container = document.getElementById('user-info-dropdown')
+    
     document.body.addEventListener('click', function(){
         if(dropdown_radio_btn.checked){
             dropdown_label.click()
@@ -97,5 +99,10 @@ define(function() {
         event.preventDefault()
         event.stopPropagation()
         sidebar_btn.checked = !sidebar_btn.checked
+    })
+
+    dropdown_container.addEventListener('click', function(event){
+        event.preventDefault()
+        event.stopPropagation()
     })
 });
