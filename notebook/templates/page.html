@@ -101,7 +101,6 @@
     document.nbjs_translations = {{ nbjs_translations|safe }};
     document.documentElement.lang = navigator.language.toLowerCase();
     </script>
-
     {% block meta %}
     {% endblock %}
 
@@ -124,6 +123,175 @@ dir="ltr">
 
 <div id="header" role="navigation" aria-label="{% trans %}Top Menu{% endtrans %}">
   <div id="header-container" class="container">
+  <label for="checkbox-sidebar" class="sidebar-custom-label" id="sidebar-label">
+    <input id="checkbox-sidebar" class="checkbox-sidebar" name="checkbox-sidebar" type="checkbox">
+    <i class="fa fa-bars sidebar-open"></i>
+    <i class="fa fa-times sidebar-close"></i>
+    <div class="sidebar-menu-container">
+      <span class="sidebar-menu-heading">QuarticView</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            My Dashboard
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Reliability
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bolt sidebar-menu-list-icon"></i>
+            Energy
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Throughput
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Quality
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Safety
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Environment
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Alarms &amp; Events
+          </a>
+        </li>
+      </ul>
+      <span class="sidebar-menu-heading">ContexAlyze</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bar-chart sidebar-menu-list-icon"></i>
+            Self-Service Analytics
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-window-restore sidebar-menu-list-icon"></i>
+            Batch Analytics
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bolt sidebar-menu-list-icon"></i>
+            Saved Searches
+          </a>
+        </li>
+      </ul>
+      <span class="sidebar-menu-heading">eXponence</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bar-chart sidebar-menu-list-icon"></i>
+            Project Builder
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-puzzle-piece sidebar-menu-list-icon"></i>
+            Reckon Insights
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bolt sidebar-menu-list-icon"></i>
+            Reckon Rules
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-server sidebar-menu-list-icon"></i>
+            Context Frames
+          </a>
+        </li>
+      </ul>
+      <span class="sidebar-menu-heading">illuminator</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bar-chart sidebar-menu-list-icon"></i>
+            AssetHarbor
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-puzzle-piece sidebar-menu-list-icon"></i>
+            ProductHarbor
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-sitemap sidebar-menu-list-icon"></i>
+            Qnnect
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-server sidebar-menu-list-icon"></i>
+            Meta Definitions
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-server sidebar-menu-list-icon"></i>
+            OPC UA Writeback
+          </a>
+        </li>
+      </ul>
+      <span class="sidebar-menu-heading">Administration</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-bar-chart sidebar-menu-list-icon"></i>
+            User Management
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-users sidebar-menu-list-icon"></i>
+            User Persona
+          </a>
+        </li>
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-cog sidebar-menu-list-icon"></i>
+            Global Settings
+          </a>
+        </li>
+      </ul>
+      <span class="sidebar-menu-heading">Support</span>
+      <ul class="sidebar-menu-list">
+        <li class="sidebar-menu-list-item">
+          <a class="sidebar-menu-list-link" href="#">
+            <i class="fa fa-download sidebar-menu-list-icon"></i>
+            Downloads
+          </a>
+        </li>
+      </ul>
+    </div>
+  </label>
   <div id="ipython_notebook" class="nav navbar-brand"><a href="{{default_url}}
     {%- if logged_in and token -%}?token={{token}}{%- endif -%}" title='{% trans %}dashboard{% endtrans %}'>
       {% block logo %}<img src='{{static_url("base/images/logo.png") }}' alt='Jupyter Notebook'/>{% endblock %}
@@ -138,7 +306,30 @@ dir="ltr">
 
     <span id="login_widget">
       {% if logged_in %}
-        <button id="logout" class="btn btn-sm navbar-btn">{% trans %}Logout{% endtrans %}</button>
+        <label for="checkbox-custom" class="checkbox-custom-label" id="checkbox-custom-label">
+          <input id="checkbox-custom" class="checkbox-custom" name="checkbox-custom" type="checkbox">
+          <i class="fa fa-user-circle login_user"></i>
+          <div class="dropdown-container">
+              <div class="user-info-container">
+                <img alt="profile" data-testid="user-pic" src="{{static_url("base/images/profile.png") }}" class="profile-image">
+                <div class="user-info">
+                  {% if user %}
+                  <span data-testid="user-name" class="user-info-name">{{user.name}}</span>
+                  <span data-testid="user-email" class="user-info-email">{{user.__dict__}}</span>
+                  {% else %}
+                  <span data-testid="user-name" class="user-info-name">quartic-dev-india</span>
+                  <span data-testid="user-email" class="user-info-email">dev@quartic.ai</span>
+                  {% endif %}
+                </div>
+              </div>
+              <a data-testid="account-link" href="/administration/profile/" class="dropdown-links">
+                  <i class="fa fa-user-o dropdown-links-icon"></i>View Account
+              </a>
+              <a href="#" data-testid="sign-out-link" class="dropdown-links" id="logout">
+                <i class="fa fa-unlock-alt dropdown-links-icon"></i>Sign Out
+              </a>
+          </div>
+        </label>
       {% elif login_available and not logged_in %}
         <button id="login" class="btn btn-sm navbar-btn">{% trans %}Login{% endtrans %}</button>
       {% endif %}

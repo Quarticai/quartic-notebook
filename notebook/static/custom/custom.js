@@ -72,3 +72,30 @@
  * @class customjs
  * @static
  */
+
+define(function() {
+    var dropdown_radio_btn = document.getElementById('checkbox-custom')
+    var sidebar_btn = document.getElementById('checkbox-sidebar')
+    var dropdown_label = document.getElementById('checkbox-custom-label')
+    var sidebar_label = document.getElementById('sidebar-label')
+    document.body.addEventListener('click', function(){
+        if(dropdown_radio_btn.checked){
+            dropdown_label.click()
+        }
+        if(sidebar_btn.checked){
+            sidebar_label.click()
+        }
+    })
+
+    dropdown_label.addEventListener('click', function(event){
+        event.preventDefault()
+        event.stopPropagation()
+        dropdown_radio_btn.checked = !dropdown_radio_btn.checked
+    })
+
+    sidebar_label.addEventListener('click', function(event){
+        event.preventDefault()
+        event.stopPropagation()
+        sidebar_btn.checked = !sidebar_btn.checked
+    })
+});
