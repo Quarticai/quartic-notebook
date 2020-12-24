@@ -6,11 +6,11 @@ OS := none
 CPU_ARCH = any
 
 help:
-	@echo "quartic-notebook Makefile Help:\n"\
+	@echo "quartic_notebook Makefile Help:\n"\
 	"clean:  Remove all cache and wheel packages.\n"\
-	"build:  Build deming-core wheel package via setup.py.\n"\
+	"build:  Build quartic_notebook wheel package via setup.py.\n"\
 	"version:  Show current deming-core version.\n"\
-	"publish:  Upload the package in dist directory that matches current deming-core version.\n"\
+	"publish:  Upload the package in dist directory that matches current quartic_notebook version.\n"\
 	" VERSION Specify another version to upload (If there is one available). "
 
 clean-dist:
