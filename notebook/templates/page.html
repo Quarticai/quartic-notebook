@@ -21,31 +21,6 @@
     <script src="{{static_url('components/create-react-class/index.js')}}" type="text/javascript"></script>
     <script src="{{static_url('components/requirejs/require.js') }}" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" href="{{static_url("icon-fonts/css/all.css") }}" type="text/css" />
-    <script type='text/javascript'>
-      requirejs(['components/axios/dist/axios.min'], function(axios){
-        var axiosTransport = axios.create({
-          withCredentials: true
-        })
-
-        var base_api_url = 'http://localhost:8000'
-
-        axiosTransport.get(base_api_url+'/user_detail')
-          .then(function(response){
-            var user_data = response.data
-            axiosTransport.get(base_api_url+'/accounts/users/features/')
-              .then(function(response){
-                var features_data = response.data
-                window.jhdata = {
-                  user_detail: user_data,
-                  features: features_data
-                }
-              })
-          })
-          .catch(function(err){
-            console.log(err)
-          })
-      })
-    </script>
     <script>
       require.config({
           {% if version_hash %}
@@ -154,168 +129,228 @@ dir="ltr">
     <i class="fal fa-bars sidebar-open"></i>
     <i class="fal fa-times sidebar-close"></i>
     <div class="sidebar-menu-container">
+      {% if CTX_FEATURES["QUARTIC_VIEW"] in features and features[CTX_FEATURES["QUARTIC_VIEW"]] %}
       <span class="sidebar-menu-heading">QuarticView</span>
       <ul class="sidebar-menu-list">
+        {% if CTX_FEATURES["DASHBOARD"] in features and features[CTX_FEATURES["DASHBOARD"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/contexalyze/my-dashboard'}}">
             <i class="fal fa-window-restore sidebar-menu-list-icon"></i>
             My Dashboard
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["RELIABILITY"] in features and features[CTX_FEATURES["RELIABILITY"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/reliability'}}">
             <i class="fal fa-atom-alt sidebar-menu-list-icon"></i>
             Reliability
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["ENERGY"] in features and features[CTX_FEATURES["ENERGY"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/energy'}}">
             <i class="fal fa-bolt sidebar-menu-list-icon"></i>
             Energy
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["THROUGHPUT"] in features and features[CTX_FEATURES["THROUGHPUT"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/throughput'}}">
             <i class="fal fa-conveyor-belt-alt sidebar-menu-list-icon"></i>
             Throughput
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["QUALITY"] in features and features[CTX_FEATURES["QUALITY"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quality/quality-events'}}">
             <i class="fal fa-award sidebar-menu-list-icon"></i>
             Quality
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["SAFETY"] in features and features[CTX_FEATURES["SAFETY"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/safety'}}">
             <i class="fal fa-first-aid sidebar-menu-list-icon"></i>
             Safety
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["ENVIRONMENT"] in features and features[CTX_FEATURES["ENVIRONMENT"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/environment'}}">
             <i class="fal fa-seedling sidebar-menu-list-icon"></i>
             Environment
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["ALARMS_AND_EVENTS"] in features and features[CTX_FEATURES["ALARMS_AND_EVENTS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/quartic-view/alarms-and-events'}}">
             <i class="fal fa-bell-exclamation sidebar-menu-list-icon"></i>
             Alarms &amp; Events
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
+      {% if CTX_FEATURES["CONTEXALYZE"] in features and features[CTX_FEATURES["CONTEXALYZE"]] %}
       <span class="sidebar-menu-heading">ContexAlyze</span>
       <ul class="sidebar-menu-list">
+        {% if CTX_FEATURES["SELF_SERVICE_ANALYTICS"] in features and features[CTX_FEATURES["SELF_SERVICE_ANALYTICS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/contexalyze/self-service-analytics'}}">
             <i class="fal fa-chart-bar sidebar-menu-list-icon"></i>
             Self-Service Analytics
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["BATCH_ANALYTICS"] in features and features[CTX_FEATURES["BATCH_ANALYTICS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/contexalyze/batch-analytics'}}">
             <i class="fal fa-boxes sidebar-menu-list-icon"></i>
             Batch Analytics
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["SAVED_SEARCHES"] in features and features[CTX_FEATURES["SAVED_SEARCHES"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/contexalyze/saved-searches'}}">
             <i class="fal fa-file-search sidebar-menu-list-icon"></i>
             Saved Searches
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
+      {% if CTX_FEATURES["EXPONENCE"] in features and features[CTX_FEATURES["EXPONENCE"]] %}
       <span class="sidebar-menu-heading">eXponence</span>
       <ul class="sidebar-menu-list">
+        {% if (CTX_FEATURES["POV"] in features and features[CTX_FEATURES["POV"]]) or (CTX_FEATURES["META_TRAINER"] in features and features[CTX_FEATURES["META_TRAINER"]]) %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/project-builder'}}">
             <i class="fal fa-project-diagram sidebar-menu-list-icon"></i>
             Project Builder
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["RECKON_INSIGHTS"] in features and features[CTX_FEATURES["RECKON_INSIGHTS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/reckon/reckon-insights'}}">
             <i class="fal fa-puzzle-piece sidebar-menu-list-icon"></i>
             Reckon Insights
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["RECKON_RULES"] in features and features[CTX_FEATURES["RECKON_RULES"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/reckon/reckon-rules'}}">
             <i class="fal fa-check-double sidebar-menu-list-icon"></i>
             Reckon Rules
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["EVENT_FRAMES"] in features and features[CTX_FEATURES["EVENT_FRAMES"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/reckon/context-frames'}}">
             <i class="fal fa-server sidebar-menu-list-icon"></i>
             Context Frames
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
+      {% if CTX_FEATURES["ILLUMINATOR"] in features and features[CTX_FEATURES["ILLUMINATOR"]] %}
       <span class="sidebar-menu-heading">illuminator</span>
       <ul class="sidebar-menu-list">
+        {% if CTX_FEATURES["ASSET_HARBOUR"] in features and features[CTX_FEATURES["ASSET_HARBOUR"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/illuminator/asset-harbor'}}">
             <i class="fal fa-box sidebar-menu-list-icon"></i>
             AssetHarbor
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["PRODUCT_HARBOR"] in features and features[CTX_FEATURES["PRODUCT_HARBOR"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/illuminator/product-harbor'}}">
             <i class="fal fa-box sidebar-menu-list-icon"></i>
             ProductHarbor
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["QNNECT"] in features and features[CTX_FEATURES["QNNECT"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/illuminator/qnnect'}}">
             <i class="fal fa-sitemap sidebar-menu-list-icon"></i>
             Qnnect
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["GLOBAL_DEFINITIONS"] in features and features[CTX_FEATURES["GLOBAL_DEFINITIONS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/illuminator/global-definitions'}}">
             <i class="fal fa-globe sidebar-menu-list-icon"></i>
             Meta Definitions
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["OPCUA_WRITEBACK"] in features and features[CTX_FEATURES["OPCUA_WRITEBACK"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/illuminator/opcua-writeback'}}">
             <i class="fal fa-file-signature sidebar-menu-list-icon"></i>
             OPC UA Writeback
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
+      {% if CTX_FEATURES["ADMINISTRATION"] in features and features[CTX_FEATURES["ADMINISTRATION"]] %}
       <span class="sidebar-menu-heading">Administration</span>
       <ul class="sidebar-menu-list">
+        {% if CTX_FEATURES["USER_MANAGEMENT"] in features and features[CTX_FEATURES["USER_MANAGEMENT"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/adminstration/users'}}">
             <i class="fal fa-user-cog sidebar-menu-list-icon"></i>
             User Management
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["USER_PERSONA_MANAGEMENT"] in features and features[CTX_FEATURES["USER_PERSONA_MANAGEMENT"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/adminstration/organisation-groups'}}">
             <i class="fal fa-users sidebar-menu-list-icon"></i>
             User Persona
           </a>
         </li>
+        {% endif %}
+        {% if CTX_FEATURES["GLOBAL_SETTINGS"] in features and features[CTX_FEATURES["GLOBAL_SETTINGS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/adminstration/global-settings'}}">
             <i class="fal fa-cog sidebar-menu-list-icon"></i>
             Global Settings
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
+      {% if CTX_FEATURES["SUPPORT"] in features and features[CTX_FEATURES["SUPPORT"]] %}
       <span class="sidebar-menu-heading">Support</span>
       <ul class="sidebar-menu-list">
+        {% if CTX_FEATURES["DOWNLOADS"] in features and features[CTX_FEATURES["DOWNLOADS"]] %}
         <li class="sidebar-menu-list-item">
-          <a class="sidebar-menu-list-link" href="#">
+          <a class="sidebar-menu-list-link" href="{{site_url+'/support/downloads'}}">
             <i class="fal fa-download sidebar-menu-list-icon"></i>
             Downloads
           </a>
         </li>
+        {% endif %}
       </ul>
+      {% endif %}
     </div>
   </label>
   <div id="ipython_notebook" class="nav navbar-brand"><a href="{{default_url}}
@@ -339,17 +374,19 @@ dir="ltr">
               <div class="user-info-container">
                 <img alt="profile" data-testid="user-pic" src="{{static_url("base/images/profile.png") }}" class="profile-image">
                 <div class="user-info">
-                  <span data-testid="user-name" class="user-info-name">quartic-dev-india</span>
-                  <span data-testid="user-email" class="user-info-email">dev@quartic.ai</span>
+                  <span data-testid="user-name" class="user-info-name">{{user_data.name}}</span>
+                  <span data-testid="user-email" class="user-info-email">{{user_data.email}}</span>
                 </div>
               </div>
-              <a data-testid="account-link" href="/administration/profile/" class="dropdown-links">
+              <a data-testid="account-link" href="{{site_url+'/administration/profile/'}}" class="dropdown-links">
                   <i class="far fa-user dropdown-links-icon"></i>View Account
               </a>
-              <a href="#" data-testid="sign-out-link" class="dropdown-links" id="logout">
+              {% if (CTX_FEATURES["SETTINGS"] in features and features[CTX_FEATURES["SETTINGS"]]) or (CTX_FEATURES["SOFTWARE_UPDATES"] in features and features[CTX_FEATURES["SOFTWARE_UPDATES"]]) %}
+              <a href="{{site_url+'/administration/settings'}}" data-testid="sign-out-link" class="dropdown-links" id="logout">
                 <i class="far fa-cog dropdown-links-icon"></i>Settings
               </a>
-              <a href="#" data-testid="sign-out-link" class="dropdown-links" id="logout">
+              {% endif %}
+              <a href="{{site_url+'/accounts/logout'}}" data-testid="sign-out-link" class="dropdown-links" id="logout">
                 <i class="far fa-unlock dropdown-links-icon"></i>Sign Out
               </a>
           </div>
