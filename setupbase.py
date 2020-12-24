@@ -158,7 +158,6 @@ def find_package_data():
         pjoin(components, "xterm.js-css", "index.css"),
         pjoin(components, "xterm.js-fit", "index.js"),
         pjoin(components, "text-encoding", "lib", "encoding.js"),
-        pjoin(components, "axios", "dist", "axios.min.js"),
         pjoin("static", "icon-fonts", "css", "*.css"),
         pjoin("static", "icon-fonts", "webfonts", "**.*"),
     ])
