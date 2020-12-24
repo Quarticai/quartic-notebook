@@ -236,6 +236,9 @@ class IPythonHandler(AuthenticatedHandler):
             }
         except Exception as e:
             print("Error: %s" % e)
+            return {
+                "site_url": site_url
+            }
 
     @property
     def jinja_template_vars(self):
