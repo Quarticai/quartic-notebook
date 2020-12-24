@@ -18,6 +18,16 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+.dropdown-overlay {
+    display: none;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    top: 0;
+    right: 0;
+}
+
 body > #header {
     /* Initially hidden to prevent FLOUC */
     display: none;
@@ -35,16 +45,16 @@ body > #header {
         width: 100%;
         background-color: #222;
         align-items: center;
+        position: relative;
 
         .sidebar-custom-label {
             cursor: pointer;
-            position: relative;
             padding: 10px 20px;
             background-color: transparent;
             transition: background-color 0.8s;
             margin: 0 1.6rem 0 0;
             width: 54px;
-            z-index: 99;
+            z-index: 2;
         }
 
         .checkbox-sidebar {
@@ -66,15 +76,15 @@ body > #header {
             display: none;
         }
 
-        .checkbox-sidebar:hover + .sidebar-open, .checkbox-sidebar:hover ~ .sidebar-close {
+        .sidebar-custom-label:hover .sidebar-open, .sidebar-custom-label:hover .sidebar-close {
             color: @primary_color;
         }
 
-        .checkbox-sidebar:checked + .sidebar-open {
+        .checkbox-sidebar:checked + .sidebar-custom-label .sidebar-open {
             display: none;
         }
 
-        .checkbox-sidebar:checked ~ .sidebar-close {
+        .checkbox-sidebar:checked + .sidebar-custom-label .sidebar-close {
             display: block;
         }
 
@@ -83,7 +93,7 @@ body > #header {
             width: 240px;
             top: 40px;
             left: -240px;
-            z-index: 999;
+            z-index: 2;
             overflow-x: hidden;
             height: calc(~"100vh - 40px");
             transition: 0.3s;
@@ -137,6 +147,10 @@ body > #header {
             width: 24px;
             margin-right: 0.4rem;
         }
+
+        .checkbox-sidebar:checked ~ .dropdown-overlay {
+            display: block;
+        }
     }
 
     .header-bar {
@@ -183,13 +197,14 @@ body > #header {
     }
 
     #login_widget {
-        .checkbox-custom {
+        position: relative;
+
+        .login-checkbox {
             display: none;
         }
 
-        .checkbox-custom-label {
+        .login-checkbox-label {
             cursor: pointer;
-            position: relative;
             padding: 10px 20px;
             background-color: transparent;
             transition: background-color 0.8s;
@@ -197,7 +212,7 @@ body > #header {
             z-index: 99;
         }
 
-        .checkbox-custom-label:hover {
+        .login-checkbox-label:hover {
             background-color: #303030;
         }
 
@@ -209,7 +224,7 @@ body > #header {
             border-radius: 50%;
         }
 
-        .checkbox-custom:hover+.login_user {
+        .login-checkbox-label:hover > .login_user {
             color: @primary_color;
         }
 
@@ -230,7 +245,7 @@ body > #header {
             z-index: 2;
         }
 
-        .checkbox-custom:checked ~ .dropdown-container {
+        .login-checkbox:checked ~ .dropdown-container {
             opacity: 1;
             visibility: visible;
         }
@@ -275,6 +290,7 @@ body > #header {
             padding: 10px;
             font-size: 14px;
             line-height: 20px;
+            border: none;
             border-bottom: 1px solid #efefef;
             margin: 0;
         }
@@ -288,6 +304,10 @@ body > #header {
         .dropdown-links-icon {
             width: 24px;
             margin-right: .4rem;
+        }
+
+        .login-checkbox:checked ~ .dropdown-overlay {
+            display: block;
         }
     }
 }

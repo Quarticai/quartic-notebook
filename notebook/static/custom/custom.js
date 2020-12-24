@@ -74,35 +74,18 @@
  */
 
 define(function() {
-    var dropdown_radio_btn = document.getElementById('checkbox-custom')
+    var dropdown_radio_btn = document.getElementById('login-checkbox')
     var sidebar_btn = document.getElementById('checkbox-sidebar')
-    var dropdown_label = document.getElementById('checkbox-custom-label')
-    var sidebar_label = document.getElementById('sidebar-label')
-    var dropdown_container = document.getElementById('user-info-dropdown')
-    
-    document.body.addEventListener('click', function(){
-        if(dropdown_radio_btn.checked){
-            dropdown_label.click()
-        }
-        if(sidebar_btn.checked){
-            sidebar_label.click()
-        }
-    })
+    var sidebar_overlay = document.getElementById('sidebar-overlay')
+    var dropdown_overlay = document.getElementById('login-dropdown-overlay')
 
-    dropdown_label.addEventListener('click', function(event){
-        event.preventDefault()
+    dropdown_overlay.addEventListener('click', function(event){
         event.stopPropagation()
         dropdown_radio_btn.checked = !dropdown_radio_btn.checked
     })
 
-    sidebar_label.addEventListener('click', function(event){
-        event.preventDefault()
+    sidebar_overlay.addEventListener('click', function(event){
         event.stopPropagation()
         sidebar_btn.checked = !sidebar_btn.checked
-    })
-
-    dropdown_container.addEventListener('click', function(event){
-        event.preventDefault()
-        event.stopPropagation()
     })
 });
