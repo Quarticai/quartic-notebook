@@ -79,6 +79,8 @@ define([
                 )
             );
 
+            // Create the Kernel Select option > Change kernel type
+            // Add click and text change handler for the kernel select element
             change_select_kernel_menu.append(
                 $("<option>").attr("id", "kernel-selectmenu-"+ks.name)
                     .click( function () {
@@ -98,14 +100,6 @@ define([
                         .text(ks.spec.display_name)
                 )
             );
-
-            new_notebook_submenu.append(
-                $("<option>").attr("id", "kernel-selectmenu-"+ks.name)
-                    .click( function () {
-                        that.new_notebook(ks.name);
-                    })
-                    .text(ks.spec.display_name)
-            )
 
         });
         // trigger loaded promise

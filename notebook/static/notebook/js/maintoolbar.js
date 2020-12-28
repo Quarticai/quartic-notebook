@@ -61,7 +61,7 @@ define([
          [
            ['jupyter-notebook:show-command-palette'],
            'cmd_palette'],
-         ['<change_kernel>']
+         ['<change_kernel>'] // Add a pseudo action for kernel change
         ];
         this.construct(grps);
     };
@@ -132,6 +132,7 @@ define([
 
     };
 
+    // Register the pseudo action for kernel change and create the select menu
     MainToolBar.prototype._pseudo_actions.change_kernel = function () {
         var multiselectKernel = $('<option/>').attr('value','multiselect').attr('disabled','').text('-');
         var kernelSel = $('<select/>')

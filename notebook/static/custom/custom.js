@@ -74,6 +74,7 @@
  */
 
 define(function() {
+    // Add click handlers for the background overlay to uncheck the respective checkbox
     var dropdown_radio_btn = document.getElementById('login-checkbox')
     var sidebar_btn = document.getElementById('checkbox-sidebar')
     var sidebar_overlay = document.getElementById('sidebar-overlay')
