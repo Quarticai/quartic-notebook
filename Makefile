@@ -9,7 +9,7 @@ help:
 	@echo "quartic_notebook Makefile Help:\n"\
 	"clean:  Remove all cache and wheel packages.\n"\
 	"build:  Build quartic_notebook wheel package via setup.py.\n"\
-	"version:  Show current deming-core version.\n"\
+	"version:  Show current quartic_notebook version.\n"\
 	"publish:  Upload the package in dist directory that matches current quartic_notebook version.\n"\
 	" VERSION Specify another version to upload (If there is one available). "
 
