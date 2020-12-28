@@ -728,7 +728,7 @@ class NotebookApp(JupyterApp):
         if value:
             try:
                 import json_logging
-                self.log.debug('initializing json logging')
+                self.log.info('initializing json logging')
                 json_logging.init_non_web(enable_json=True)
                 self._log_formatter_cls = json_logging.JSONLogFormatter
             except ImportError:
@@ -1045,7 +1045,7 @@ class NotebookApp(JupyterApp):
         if hard >= DEFAULT_SOFT:
             return DEFAULT_SOFT
 
-        self.log.debug("Default value for min_open_files_limit is ignored (hard=%r, soft=%r)", hard, soft)
+        self.log.info("Default value for min_open_files_limit is ignored (hard=%r, soft=%r)", hard, soft)
 
         return soft
 
@@ -1653,7 +1653,7 @@ class NotebookApp(JupyterApp):
     def init_resources(self):
         """initialize system resources"""
         if resource is None:
-            self.log.debug('Ignoring min_open_files_limit because the limit cannot be adjusted (for example, on Windows)')
+            self.log.info('Ignoring min_open_files_limit because the limit cannot be adjusted (for example, on Windows)')
             return
 
         old_soft, old_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -1662,7 +1662,7 @@ class NotebookApp(JupyterApp):
         if old_soft < soft:
             if hard < soft:
                 hard = soft
-            self.log.debug(
+            self.log.info(
                 'Raising open file limit: soft {}->{}; hard {}->{}'.format(old_soft, soft, old_hard, hard)
             )
             resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
@@ -2024,7 +2024,7 @@ class NotebookApp(JupyterApp):
 
         seconds_since_active = \
             (utcnow() - self.web_app.last_activity()).total_seconds()
-        self.log.debug("No activity for %d seconds.",
+        self.log.info("No activity for %d seconds.",
                        seconds_since_active)
         if seconds_since_active > self.shutdown_no_activity_timeout:
             self.log.info("No kernels or terminals for %d seconds; shutting down.",

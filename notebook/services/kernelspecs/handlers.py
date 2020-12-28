@@ -63,16 +63,20 @@ class MainKernelSpecHandler(APIHandler):
         model['default'] = km.default_kernel_name
         model['kernelspecs'] = specs = {}
         kspecs = yield maybe_future(ksm.get_all_specs())
-        for kernel_name, kernel_info in kspecs.items():
-            try:
-                if is_kernelspec_model(kernel_info):
-                    d = kernel_info
-                else:
-                    d = kernelspec_model(self, kernel_name, kernel_info['spec'], kernel_info['resource_dir'])
-            except Exception:
-                self.log.error("Failed to load kernel spec: '%s'", kernel_name, exc_info=True)
-                continue
-            specs[kernel_name] = d
+        for kspec in kspecs:
+            for kernel_name, kernel_info in kspec.items():
+                try:
+                    if is_kernelspec_model(kernel_info):
+                        d = kernel_info
+                    else:
+                        d = kernelspec_model(self, kernel_name, kernel_info['spec'], kernel_info['resource_dir'])
+                except Exception:
+                    self.log.error("Failed to load kernel spec: '%s'", kernel_name, exc_info=True)
+                    continue
+                if kernel_name in specs:
+                    specs[kernel_name + '2'] = d
+                specs[kernel_name] = d
+                self.log.info(f"spec={specs}")
         self.set_header("Content-Type", 'application/json')
         self.finish(json.dumps(model))
 

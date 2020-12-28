@@ -87,7 +87,7 @@ class AuthenticatedHandler(web.RequestHandler):
                 # tornado raise Exception (not a subclass)
                 # if method is unsupported (websocket and Access-Control-Allow-Origin
                 # for example, so just ignore)
-                self.log.debug(e)
+                self.log.info(e)
 
     def force_clear_cookie(self, name, path="/", domain=None):
         """Deletes the cookie with the given name.
@@ -248,7 +248,7 @@ class IPythonHandler(AuthenticatedHandler):
 
     @property
     def contents_js_source(self):
-        self.log.debug("Using contents: %s", self.settings.get('contents_js_source',
+        self.log.info("Using contents: %s", self.settings.get('contents_js_source',
             'services/contents'))
         return self.settings.get('contents_js_source', 'services/contents')
     
@@ -543,7 +543,7 @@ class IPythonHandler(AuthenticatedHandler):
         try:
             model = json.loads(body)
         except Exception as e:
-            self.log.debug("Bad JSON: %r", body)
+            self.log.info("Bad JSON: %r", body)
             self.log.error("Couldn't parse JSON", exc_info=True)
             raise web.HTTPError(400, u'Invalid JSON in body of request') from e
         return model
@@ -897,7 +897,7 @@ class FilesRedirectHandler(IPythonHandler):
                 raise web.HTTPError(404)
 
             url = url_path_join(self.base_url, 'files', url_escape(path))
-        self.log.debug("Redirecting %s to %s", self.request.path, url)
+        self.log.info("Redirecting %s to %s", self.request.path, url)
         self.redirect(url)
     
     def get(self, path=''):
