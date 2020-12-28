@@ -100,7 +100,7 @@ def find_package_data():
     """
     # This is not enough for these things to appear in a sdist.
     # We need to muck with the MANIFEST to get this to work
-    
+
     # exclude components and less from the walk;
     # we will build the components separately
     excludes = [
@@ -120,12 +120,12 @@ def find_package_data():
             continue
         for f in files:
             static_data.append(pjoin(parent, f))
-    
+
     # for verification purposes, explicitly add main.min.js
     # so that installation will fail if they are missing
     for app in ['auth', 'edit', 'notebook', 'terminal', 'tree']:
         static_data.append(pjoin('static', app, 'js', 'main.min.js'))
-    
+
     components = pjoin("static", "components")
     # select the components we actually need to install
     # (there are lots of resources we bundle for sdist-reasons that we don't actually use)
@@ -174,10 +174,10 @@ def find_package_data():
         mj('config', 'TeX-AMS-MML_HTMLorMML-full.js'),
         mj('config', 'Safe.js'),
     ])
-    
+
     trees = []
     mj_out = mj('jax', 'output')
-    
+
     if os.path.exists(mj_out):
         for output in os.listdir(mj_out):
             path = pjoin(mj_out, output)
@@ -204,15 +204,17 @@ def find_package_data():
 
     os.chdir(cwd)
 
-    package_data = {
-        'notebook' : ['templates/*'] + static_data,
-        'notebook.tests' : js_tests,
-        'notebook.bundler.tests': ['resources/*', 'resources/*/*', 'resources/*/*/.*'],
+    return {
+        'notebook': ['templates/*'] + static_data,
+        'notebook.tests': js_tests,
+        'notebook.bundler.tests': [
+            'resources/*',
+            'resources/*/*',
+            'resources/*/*/.*',
+        ],
         'notebook.services.api': ['api.yaml'],
         'notebook.i18n': ['*/LC_MESSAGES/*.*'],
     }
-    
-    return package_data
 
 
 def check_package_data(package_data):
@@ -518,8 +520,7 @@ class CompileJS(Command):
                     yield f
         yield pjoin(static, 'services', 'config.js')
         if name == 'notebook':
-            for f in glob(pjoin(static, 'services', '*', '*.js')):
-                yield f
+            yield from glob(pjoin(static, 'services', '*', '*.js'))
         for parent, dirs, files in os.walk(pjoin(static, 'components')):
             if os.path.basename(parent) == 'MathJax':
                 # don't look in MathJax, since it takes forever to walk it
@@ -606,9 +607,7 @@ def css_js_prerelease(command, strict=False):
             css = self.distribution.get_command_obj('css')
             jsdeps.force = js.force = strict
 
-            targets = [ jsdeps.bower_dir ]
-            targets.extend(js.targets)
-            targets.extend(css.targets)
+            targets = [jsdeps.bower_dir, *js.targets, *css.targets]
             missing = [ t for t in targets if not os.path.exists(t) ]
 
             if not is_repo and not missing:
