@@ -242,12 +242,13 @@ body > #header {
             visibility: hidden;
             min-width: 10rem;
             cursor: default;
-            z-index: 2;
+            z-index: -1;
         }
 
         .login-checkbox:checked ~ .dropdown-container {
             opacity: 1;
             visibility: visible;
+            z-index: 2;
         }
 
         .user-info-container {
