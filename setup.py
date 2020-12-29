@@ -110,8 +110,7 @@ for more information.
         'ipykernel', # bless IPython kernel for now
         'Send2Trash',
         'terminado>=0.8.3',
-        'prometheus_client',
-        'Momoko==2.2.5.1'
+        'prometheus_client'
     ],
     extras_require = {
         'test': ['pytest', 'coverage', 'requests',
