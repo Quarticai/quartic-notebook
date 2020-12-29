@@ -44,9 +44,12 @@ class GatewayClient(SingletonConfigurable):
     def _url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'http'
-        if value is not None and len(value) > 0:
-            if not str(value).lower().startswith('http'):
-                raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
+        if (
+            value is not None
+            and len(value) > 0
+            and not str(value).lower().startswith('http')
+        ):
+            raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
         return value
 
     ws_url = Unicode(default_value=None, allow_none=True, config=True,
@@ -60,18 +63,20 @@ class GatewayClient(SingletonConfigurable):
     @default('ws_url')
     def _ws_url_default(self):
         default_value = os.environ.get(self.ws_url_env)
-        if default_value is None:
-            if self.gateway_enabled:
-                default_value = self.url.lower().replace('http', 'ws')
+        if default_value is None and self.gateway_enabled:
+            default_value = self.url.lower().replace('http', 'ws')
         return default_value
 
     @validate('ws_url')
     def _ws_url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'ws'
-        if value is not None and len(value) > 0:
-            if not str(value).lower().startswith('ws'):
-                raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
+        if (
+            value is not None
+            and len(value) > 0
+            and not str(value).lower().startswith('ws')
+        ):
+            raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
         return value
 
     kernels_endpoint_default_value = '/api/kernels'
@@ -360,7 +365,7 @@ class GatewayKernelManager(MappingKernelManager):
                 _url = 'http://168.62.201.192:8888/api/kernels'
             self.log.info(f'Calculated base_endpoint={_url}')
 
-        _base_endpoint = _url if _url else self.base_endpoint
+        _base_endpoint = _url or self.base_endpoint
 
 
         if kernel_id:
@@ -373,7 +378,7 @@ class GatewayKernelManager(MappingKernelManager):
 
             return url_path_join(_base_endpoint, url_escape(str(kernel_id)))
 
-        return _base_endpoint if _base_endpoint else self.base_endpoint
+        return _base_endpoint or self.base_endpoint
 
     @gen.coroutine
     def start_kernel(self, kernel_id=None, path=None, **kwargs):
@@ -451,12 +456,11 @@ class GatewayKernelManager(MappingKernelManager):
         try:
             response = yield gateway_request(kernel_url, method='GET')
         except web.HTTPError as error:
-            if error.status_code == 404:
-                self.log.warn("Kernel not found at: %s" % kernel_url)
-                self.remove_kernel(kernel_id)
-                kernel = None
-            else:
+            if error.status_code != 404:
                 raise
+            self.log.warn("Kernel not found at: %s" % kernel_url)
+            self.remove_kernel(kernel_id)
+            kernel = None
         else:
             kernel = json_decode(response.body)
             self._kernels[kernel_id] = kernel
@@ -627,7 +631,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
             # self.log.info(f'kernel spec url = {i}')
             response = yield gateway_request(i, method='GET')
             # self.log.info(f'kernel spec url response = {i, response}')
-            kernel_specs = kernel_specs + [json_decode(response.body)]
+            kernel_specs += [json_decode(response.body)]
             if i == "http://192.168.1.11:8888/api/kernelspecs":
                 for kernel_spec in kernel_specs:
                     # self.log.info(f'key={key}')
@@ -638,7 +642,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
                         del kernel_spec['kernelspecs'][key]
                         # kernel_spec['display_name'] = kernel_spec['display_name'] + '198'
                         # kernel_spec['kernelspecs'][key] = key + '198'
-            # self.log.info(f'resspeconse = {kernel_specs, response.body}')
+                # self.log.info(f'resspeconse = {kernel_specs, response.body}')
         raise gen.Return(kernel_specs)
 
     @gen.coroutine

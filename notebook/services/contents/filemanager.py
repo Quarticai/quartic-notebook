@@ -242,14 +242,14 @@ class FileContentsManager(FileManagerMixin, ContentsManager):
         """Build the common base of a contents model"""
         os_path = self._get_os_path(path)
         info = os.lstat(os_path)
-        
+
         try:
             # size of file 
             size = info.st_size
         except (ValueError, OSError):
             self.log.warning('Unable to get size.')
             size = None
-        
+
         try:
             last_modified = tz.utcfromtimestamp(info.st_mtime)
         except (ValueError, OSError):
@@ -267,8 +267,7 @@ class FileContentsManager(FileManagerMixin, ContentsManager):
             created = datetime(1970, 1, 1, 0, 0, tzinfo=tz.UTC)
 
         # Create the base model.
-        model = {}
-        model['name'] = path.rsplit('/', 1)[-1]
+        model = {'name': path.rsplit('/', 1)[-1]}
         model['path'] = path
         model['last_modified'] = last_modified
         model['created'] = created
@@ -332,11 +331,13 @@ class FileContentsManager(FileManagerMixin, ContentsManager):
                     continue
 
                 try:
-                    if self.should_list(name):
-                        if self.allow_hidden or not is_file_hidden(os_path, stat_res=st):
-                            contents.append(
-                                    self.get(path='%s/%s' % (path, name), content=False)
-                            )
+                    if self.should_list(name) and (
+                        self.allow_hidden
+                        or not is_file_hidden(os_path, stat_res=st)
+                    ):
+                        contents.append(
+                                self.get(path='%s/%s' % (path, name), content=False)
+                        )
                 except OSError as e:
                     # ELOOP: recursive symlink
                     if e.errno != errno.ELOOP:
@@ -433,15 +434,14 @@ class FileContentsManager(FileManagerMixin, ContentsManager):
             if type not in (None, 'directory'):
                 raise web.HTTPError(400,
                                 u'%s is a directory, not a %s' % (path, type), reason='bad type')
-            model = self._dir_model(path, content=content)
+            return self._dir_model(path, content=content)
         elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
-            model = self._notebook_model(path, content=content)
+            return self._notebook_model(path, content=content)
         else:
             if type == 'directory':
                 raise web.HTTPError(400,
                                 u'%s is not a directory' % path, reason='bad type')
-            model = self._file_model(path, content=content, format=format)
-        return model
+            return self._file_model(path, content=content, format=format)
 
     def _save_directory(self, os_path, model, path=''):
         """create a directory"""
@@ -596,11 +596,7 @@ class FileContentsManager(FileManagerMixin, ContentsManager):
         """Return the initial API path of  a kernel associated with a given notebook"""
         if self.dir_exists(path):
             return path
-        if '/' in path:
-            parent_dir = path.rsplit('/', 1)[0]
-        else:
-            parent_dir = ''
-        return parent_dir
+        return path.rsplit('/', 1)[0] if '/' in path else ''
 
     @staticmethod
     def _validate_path(path):

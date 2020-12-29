@@ -116,18 +116,16 @@ class FileCheckpoints(FileManagerMixin, Checkpoints):
         cp_dir = os.path.join(os_path, self.checkpoint_dir)
         with self.perm_to_403():
             ensure_dir_exists(cp_dir)
-        cp_path = os.path.join(cp_dir, filename)
-        return cp_path
+        return os.path.join(cp_dir, filename)
 
     def checkpoint_model(self, checkpoint_id, os_path):
         """construct the info dict for a given checkpoint"""
         stats = os.stat(os_path)
         last_modified = tz.utcfromtimestamp(stats.st_mtime)
-        info = dict(
+        return dict(
             id=checkpoint_id,
             last_modified=last_modified,
         )
-        return info
 
     # Error Handling
     def no_such_checkpoint(self, path, checkpoint_id):
