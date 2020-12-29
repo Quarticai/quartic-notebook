@@ -21,7 +21,7 @@ class PostgresUtils:
                          'PORT': <port>
                         }
         """
-
+        #TODO: Remove the hardcoded value from here. Use env vars.
         self.db_config = {
             'NAME': 'contexalyze',
             'USER': 'postgres',
@@ -74,7 +74,7 @@ class PostgresUtils:
         except ProgrammingError as e:
             raise RuntimeError('Error excuting query "%s"\n %s' % (query, e))
 
-    def get_users(self, colname, colvalue):
+    def get_users(self):
         """
         #TODO: Remove the method if not required, this is dummy method to test the and list the connections.
         """
