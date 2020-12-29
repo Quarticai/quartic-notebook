@@ -136,7 +136,7 @@ dir="ltr">
         <ul class="sidebar-menu-list">
           {% for subFeature in parentFeature["subFeatures"] %}
             {% if (subFeature["feature"] == "POV") %}
-              {% if (subFeature["value"] in features and features[subFeature["value"]]) or ("8" in features and features["8"]) %}
+              {% if (subFeature["value"] in features and features[subFeature["value"]]) or (OTHER_FEATURES["META_TRAINER"] in features and features[OTHER_FEATURES["META_TRAINER"]]) %}
                 <li class="sidebar-menu-list-item">
                   <a class="sidebar-menu-list-link" href="{{ site_url + subFeature['url'] }}">
                     <i class="{{ subFeature['icon'] + ' sidebar-menu-list-icon'}}"></i>
