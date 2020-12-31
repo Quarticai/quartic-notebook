@@ -26,7 +26,7 @@ class PostgresUtils:
             'NAME': 'contexalyze',
             'USER': 'postgres',
             'PASSWORD': 'password',
-            'HOST': 'postgres',
+            'HOST': 'localhost',
             'PORT': '5432'
         }
         self.conn = self.__create_new_conn__()
@@ -74,14 +74,47 @@ class PostgresUtils:
         except ProgrammingError as e:
             raise RuntimeError('Error excuting query "%s"\n %s' % (query, e))
 
+
+class ExecuteQueries:
+    @property
+    def db(self):
+        return PostgresUtils()
+
+
+    def __init__(self):
+        self.db
+
+
     def get_users(self):
         """
         #TODO: Remove the method if not required, this is dummy method to test the and list the connections.
         """
 
-        self.conn = self.__get_connection__()
-        result = self.__execute_query__(self.conn, 'select * from deming_core_enterpriseuser;')
+        self.conn = self.db.__get_connection__()
+        result = self.db.__execute_query__(self.conn, 'select * from deming_core_enterpriseuser;')
+        self.db.conn.close()
+
+        return result
+
+    
+    def get_mlnodes(self):
+        """
+        Get all the mlnodes that are in the database.
+        """
+        self.conn = self.db.__get_connection__()
+        result = self.db.__execute_query__(self.conn, 'select * from deming_core_mlnode')
+
         self.conn.close()
 
         return result
 
+    
+    def get_ml_node(self, column_name, column_value):
+        """Get ml node info of particular ip
+        """
+        self.conn = self.db.__get_connection__()
+        result = self.db.__execute_query__(self.conn, f"select * from deming_core_mlnode where {column_name}='{column_value}'")
+
+        self.conn.close()
+
+        return result

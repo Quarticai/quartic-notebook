@@ -28,7 +28,7 @@ GATEWAY_WS_PING_INTERVAL_SECS = int(os.getenv('GATEWAY_WS_PING_INTERVAL_SECS', 3
 class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     session = None
-    gateway = None
+    gateways = None
     kernel_id = None
     ping_callback = None
 
@@ -63,7 +63,10 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.log.info("Initializing websocket connection %s", self.request.path)
         self.session = Session(config=self.config)
         self.log.info(f'self.config={self.config}')
-        self.gateway = GatewayWebSocketClient(gateway_url=GatewayClient.instance().url)
+        gateways = []
+        for url in GatewayClient.instance().urls:
+            gateways.append(GatewayWebSocketClient(gateway_url=url))
+        self.gateways = gateways
 
     @gen.coroutine
     def get(self, kernel_id, *args, **kwargs):
@@ -85,16 +88,18 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.ping_callback = PeriodicCallback(self.send_ping, GATEWAY_WS_PING_INTERVAL_SECS * 1000)
         self.ping_callback.start()
         self.log.info(f'on open called')
-        self.gateway.on_open(
-            kernel_id=kernel_id,
-            message_callback=self.write_message,
-            compression_options=self.get_compression_options()
-        )
+        for gateway in self.gateways:
+            gateway.on_open(
+                kernel_id=kernel_id,
+                message_callback=self.write_message,
+                compression_options=self.get_compression_options()
+            )
 
     def on_message(self, message):
         """Forward message to gateway web socket handler."""
         self.log.info(f'on message called={message}')
-        self.gateway.on_message(message)
+        for gateway in self.gateways:
+            gateway.on_message(message)
 
     def write_message(self, message, binary=False):
         """
@@ -111,7 +116,8 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     def on_close(self):
         self.log.info("Closing websocket connection %s", self.request.path)
-        self.gateway.on_close()
+        for gateway in self.gateways:
+            gateway.on_close()
         super().on_close()
 
     @staticmethod
@@ -150,8 +156,9 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
         self.ws = None
         self.kernel_id = kernel_id
+        # get the data from the kernel session.
         ws_url = url_path_join(
-            GatewayClient.instance().ws_url,
+            'ws://168.62.201.192:8888',
             GatewayClient.instance().kernels_endpoint, url_escape(kernel_id), 'channels'
         )
         if retry:
@@ -177,7 +184,7 @@ class GatewayWebSocketClient(LoggingConfigurable):
         else:
             self.log.warning("Websocket connection has been closed via client disconnect or due to error.  "
                              "Kernel with ID '{}' may not be terminated on GatewayClient: {}".
-                             format(self.kernel_id, GatewayClient.instance().url))
+                             format(self.kernel_id, GatewayClient.instance().urls))
 
     def _disconnect(self):
         self.disconnected = True

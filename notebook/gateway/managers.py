@@ -17,6 +17,7 @@ from ..utils import url_path_join
 
 from traitlets import Instance, Unicode, Float, Bool, default, validate, TraitError
 from traitlets.config import SingletonConfigurable
+from ..db_util import ExecuteQueries
 
 
 class GatewayClient(SingletonConfigurable):
@@ -26,7 +27,7 @@ class GatewayClient(SingletonConfigurable):
 
     """
 
-    url = Unicode(default_value=None, allow_none=True, config=True,
+    urls = Unicode(default_value=None, allow_none=True, config=True,
         help="""The url of the Kernel or Enterprise Gateway server where
         kernel specifications are defined and kernel management takes place.
         If defined, this Notebook server acts as a proxy for all kernel
@@ -34,20 +35,30 @@ class GatewayClient(SingletonConfigurable):
         """
     )
 
-    url_env = 'JUPYTER_GATEWAY_URL'
+    ml_nodes = ExecuteQueries().get_mlnodes()
+    ml_node_urls = []
+    for record in ml_nodes:
+        ml_node_urls.append(record.ip_address + ':8888')
 
-    @default('url')
+    urls = ml_node_urls
+
+    urls_env = 'JUPYTER_GATEWAY_URL'
+
+    @default('urls')
     def _url_default(self):
         return os.environ.get(self.url_env)
 
-    @validate('url')
+    @validate('urls')
     def _url_validate(self, proposal):
-        value = proposal['value']
-        # Ensure value, if present, starts with 'http'
-        if value is not None and len(value) > 0:
-            if not str(value).lower().startswith('http'):
-                raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
-        return value
+        values = []
+        for url in proposal:
+            value = url['value']
+            # Ensure value, if present, starts with 'http'
+            if value is not None and len(value) > 0:
+                if not str(value).lower().startswith('http'):
+                    raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
+            values.append(value)
+        return proposal
 
     ws_url = Unicode(default_value=None, allow_none=True, config=True,
         help="""The websocket url of the Kernel or Enterprise Gateway server.  If not provided, this value
@@ -222,7 +233,7 @@ class GatewayClient(SingletonConfigurable):
 
     @property
     def gateway_enabled(self):
-        return bool(self.url is not None and len(self.url) > 0)
+        return bool(self.urls is not None and len(self.urls) > 0)
 
     # Ensure KERNEL_LAUNCH_TIMEOUT has a default value.
     KERNEL_LAUNCH_TIMEOUT = int(os.environ.get('KERNEL_LAUNCH_TIMEOUT', 40))
@@ -283,22 +294,23 @@ def gateway_request(endpoint, **kwargs):
     # or the server is not running.
     # NOTE: We do this here since this handler is called during the Notebook's startup and subsequent refreshes
     # of the tree view.
+    # here the endpoint is of the gateway of the kernel
     except ConnectionRefusedError as e:
         raise web.HTTPError(
             503,
             "Connection refused from Gateway server url '{}'.  Check to be sure the"
-            " Gateway instance is running.".format(GatewayClient.instance().url)
+            " Gateway instance is running.".format(endpoint)
         ) from e
     except HTTPError as e:
         # This can occur if the host is valid (e.g., foo.com) but there's nothing there.
         raise web.HTTPError(e.code, "Error attempting to connect to Gateway server url '{}'.  "
                        "Ensure gateway url is valid and the Gateway instance is running.".
-                            format(GatewayClient.instance().url)) from e
+                            format(endpoint)) from e
     except gaierror as e:
         raise web.HTTPError(
             404,
             "The Gateway server specified in the gateway_url '{}' doesn't appear to be valid.  Ensure gateway "
-            "url is valid and the Gateway instance is running.".format(GatewayClient.instance().url)
+            "url is valid and the Gateway instance is running.".format(endpoint)
         ) from e
 
     raise gen.Return(response)
@@ -309,17 +321,20 @@ class GatewayKernelManager(MappingKernelManager):
 
     # We'll maintain our own set of kernel ids
     _kernels = {}
-    kernel_url_id_map = {'http://192.168.1.11:8888/api/kernels': [],
-                  'http://168.62.201.192:8888/api/kernels': []}
-    device_mapping = {'Python Custom': 'http://192.168.1.11:8888/api/kernels',
-                      'Python 3': 'http://168.62.201.192:8888/api/kernels'}
+    kernel_url_id_map = {}
+    gateway_urls = GatewayClient.instance().urls
+    for url in gateway_urls:
+        kernel_url_id_map[url_path_join(url, GatewayClient.instance().kernels_endpoint)] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.log.info(f'Gateway instance url={GatewayClient.instance().url}')
+        self.log.info(f'Gateway instance url={GatewayClient.instance().urls}')
         self.log.info(f'GatewayClient.instance().kernels_endpoint={GatewayClient.instance().kernels_endpoint}')
-        self.base_endpoint = url_path_join(GatewayClient.instance().url, GatewayClient.instance().kernels_endpoint)
-        self.log.info(f'base_endpoint={self.base_endpoint}')
+        base_endpoints = []
+        for url in self.gateway_urls:
+            base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
+        self.base_endpoints = base_endpoints
+        self.log.info(f'base_endpoint={self.base_endpoints}')
 
     def __contains__(self, kernel_id):
         self.log.info(f'kernel ID={kernel_id}')
@@ -327,6 +342,8 @@ class GatewayKernelManager(MappingKernelManager):
             self.log.info(f'kernel ID={kernel_id}')
             if kernel_id in value:
                 self.log.info(f'kernel id FOUND!!!!!!!!!!! url={key}')
+                self.log.info(f'kernel id FOUND!!!!!!!!!!! kernel_id={kernel_id}')
+                self.log.info(f'kernel id FOUND!!!!!!!!!!! value={value}')
                 self.log.info(f'continue')
                 continue
 
@@ -347,20 +364,20 @@ class GatewayKernelManager(MappingKernelManager):
         ----------
         kernel_id: kernel UUID (optional)
         """
-        self.log.info(f'self.base_endpoint={self.base_endpoint}')
+        self.log.info(f'self.base_endpoint={self.base_endpoints}')
         self.log.info(f'kernel_id={kernel_id}')
         self.log.info(f'kernel_name={kernel_name}')
         _url = None
         if not kernel_id:
             # if kernel_name in self.device_mapping:
             #     _url = self.device_mapping[kernel_name]
-            if '198' in kernel_name:
-                _url = 'http://192.168.1.11:8888/api/kernels'
-            else:
-                _url = 'http://168.62.201.192:8888/api/kernels'
+            # if '198' in kernel_name:
+                # _url = 'http://192.168.1.11:8888/api/kernels'
+            # else:
+            _url = 'http://168.62.201.192:8888/api/kernels'
             self.log.info(f'Calculated base_endpoint={_url}')
 
-        _base_endpoint = _url if _url else self.base_endpoint
+        _base_endpoint = _url if _url else self.base_endpoints
 
 
         if kernel_id:
@@ -373,7 +390,7 @@ class GatewayKernelManager(MappingKernelManager):
 
             return url_path_join(_base_endpoint, url_escape(str(kernel_id)))
 
-        return _base_endpoint if _base_endpoint else self.base_endpoint
+        return _base_endpoint
 
     @gen.coroutine
     def start_kernel(self, kernel_id=None, path=None, **kwargs):
@@ -446,6 +463,7 @@ class GatewayKernelManager(MappingKernelManager):
             The uuid of the kernel.
         """
         self.log.info(f"kernel_url_id_map={self.kernel_url_id_map}")
+        print('get_kernel kernel_id==> ', kernel_id)
         kernel_url = self._get_kernel_endpoint_url(kernel_id)
         self.log.info("Request kernel at: %s" % kernel_url)
         try:
@@ -483,7 +501,7 @@ class GatewayKernelManager(MappingKernelManager):
         """Get a list of kernels."""
         kernel_url = self._get_kernel_endpoint_url()
         self.log.info("Request list kernels: %s", kernel_url)
-        for i in ['http://192.168.1.11:8888/api/kernels', 'http://168.62.201.192:8888/api/kernels']:
+        for i in self.base_endpoints:
             self.log.info(f'listing kernels from = {i}')
             response = yield gateway_request(i, method='GET')
             self.log.info(f'response from listing kernels from = {i, response}')
@@ -566,12 +584,22 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        base_endpoint = url_path_join(GatewayClient.instance().url,
-                                      GatewayClient.instance().kernelspecs_endpoint)
+        print('__init__  GatewayKernelSpecManager self', self)
+        some = {
+            **kwargs
+        }
+        print('__init__  GatewayKernelSpecManager kwargs', some)
 
-        self.base_endpoint = GatewayKernelSpecManager._get_endpoint_for_user_filter(base_endpoint)
-        self.base_resource_endpoint = url_path_join(GatewayClient.instance().url,
-                                                    GatewayClient.instance().kernelspecs_resource_endpoint)
+        print('__init__  GatewayKernelSpecManager instance', GatewayClient.instance())
+        print('__init__  GatewayKernelSpecManager url', GatewayClient.instance().urls)
+        print('__init__  GatewayKernelSpecManager endpoint', GatewayClient.instance().kernelspecs_endpoint)
+        base_endpoints = []
+        base_resource_endpoints = []
+        for url in GatewayClient.instance().urls:
+            base_endpoints.append(url_path_join(url, GatewayClient.instance().kernelspecs_endpoint))
+            base_resource_endpoints.append(url_path_join(url, GatewayClient.instance().kernelspecs_resource_endpoint))
+        self.base_endpoints = GatewayKernelSpecManager._get_endpoint_for_user_filter(base_endpoints)
+        self.base_resource_endpoints = base_resource_endpoints
 
     @staticmethod
     def _get_endpoint_for_user_filter(default_endpoint):
@@ -588,13 +616,16 @@ class GatewayKernelSpecManager(KernelSpecManager):
         kernel_name: kernel name (optional)
         """
         if kernel_name:
-            return url_path_join(self.base_endpoint, url_escape(kernel_name))
+            print('kernel name', kernel_name)
+            return url_path_join(self.base_endpoints, url_escape(kernel_name))
 
-        return self.base_endpoint
+        return self.base_endpoints
 
     @gen.coroutine
     def get_all_specs(self):
+        print('get_all_specs ==>')
         fetched_kspecs = yield self.list_kernel_specs()
+        print('get_all_specs fetched_kspecs==>', fetched_kspecs)
 
         # get the default kernel name and compare to that of this server.
         # If different log a warning and reset the default.  However, the
@@ -610,6 +641,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         #     km.default_kernel_name = remote_default_kernel_name
 
         remote_kspecs = [fetched_kspec.get('kernelspecs') for fetched_kspec in fetched_kspecs]
+        print('get_all_specs remote_kspecs==>', remote_kspecs)
         raise gen.Return(remote_kspecs)
 
     @gen.coroutine
@@ -618,27 +650,33 @@ class GatewayKernelSpecManager(KernelSpecManager):
         kernel_spec_url = self._get_kernelspecs_endpoint_url()
         kernel_specs = []
         # self.log.info("Request list kernel specs at: %s", kernel_spec_url)
-        for i in ['http://192.168.1.11:8888/api/kernelspecs', 'http://168.62.201.192:8888/api/kernelspecs']:
+        # for i in ['http://192.168.1.11:8888/api/kernelspecs', 'http://168.62.201.192:8888/api/kernelspecs']:
+        for endpoint in self.base_endpoints:
+            # print('list_kernel_spec individual==>', endpoint)
             # self.log.info(f'listing kernels from = {i}')
             # response = yield gateway_request(i, method='GET')
             # self.log.info(f'response from listing kernels from = {i, response}')
             # kernels = json_decode(response.body)
             # self.log.info(f'kernels response from listing kernels from = {i, response, kernels}')
             # self.log.info(f'kernel spec url = {i}')
-            response = yield gateway_request(i, method='GET')
+            response = yield gateway_request('http://' + endpoint, method='GET')
+            # print('list_kernel_spec individual response ==>', json_decode(response.body))
             # self.log.info(f'kernel spec url response = {i, response}')
             kernel_specs = kernel_specs + [json_decode(response.body)]
-            if i == "http://192.168.1.11:8888/api/kernelspecs":
-                for kernel_spec in kernel_specs:
-                    # self.log.info(f'key={key}')
-                    # self.log.info(f'kernel_spec={kernel_spec}')
-                    for key in list(kernel_spec['kernelspecs']):
-                        kernel_spec['kernelspecs'][key + '-198'] = kernel_spec['kernelspecs'][key]
-                        kernel_spec['kernelspecs'][key + '-198']['name'] = kernel_spec['kernelspecs'][key + '-198']['name'] + '-198'
-                        del kernel_spec['kernelspecs'][key]
+            # print("list_kernel_spec mlnode data", GatewayClient.instance().ml_nodes)
+            for kernel_spec in kernel_specs:
+                # self.log.info(f'key={key}')
+                # self.log.info(f'kernel_spec={kernel_spec}')
+                for key in list(kernel_spec['kernelspecs']):
+                    # print('list_kernel_specs kernel_spec["kernelspecs"]==> ', kernel_spec['kernelspecs'])
+                    display_name = kernel_spec['kernelspecs'][key]['spec']['display_name']
+                    node = ExecuteQueries().get_ml_node('ip_address', endpoint.split(':')[0])[0]
+                    kernel_spec['kernelspecs'][node.name + display_name] = kernel_spec['kernelspecs'][key]
+                    del kernel_spec['kernelspecs'][key]
                         # kernel_spec['display_name'] = kernel_spec['display_name'] + '198'
                         # kernel_spec['kernelspecs'][key] = key + '198'
             # self.log.info(f'resspeconse = {kernel_specs, response.body}')
+        print('list_kernel_spec==>', kernel_specs)
         raise gen.Return(kernel_specs)
 
     @gen.coroutine
@@ -660,7 +698,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
                 # message is not used, but might as well make it useful for troubleshooting
                 raise KeyError(
                     'kernelspec {kernel_name} not found on Gateway server at: {gateway_url}'.
-                    format(kernel_name=kernel_name, gateway_url=GatewayClient.instance().url)
+                    format(kernel_name=kernel_name, gateway_url=kernel_spec_url)
                 ) from error
             else:
                 raise

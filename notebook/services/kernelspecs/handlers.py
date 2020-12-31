@@ -62,8 +62,12 @@ class MainKernelSpecHandler(APIHandler):
         model = {}
         model['default'] = km.default_kernel_name
         model['kernelspecs'] = specs = {}
+        print('kernel_spec_manager ==>', ksm)
+        print('kernel_manager ==>', km)
         kspecs = yield maybe_future(ksm.get_all_specs())
+        print('get kernel specs: ==>', kspecs)
         for kspec in kspecs:
+            print('kspec ==>', kspec)
             for kernel_name, kernel_info in kspec.items():
                 try:
                     if is_kernelspec_model(kernel_info):
