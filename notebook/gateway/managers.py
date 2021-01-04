@@ -44,9 +44,12 @@ class GatewayClient(SingletonConfigurable):
     def _url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'http'
-        if value is not None and len(value) > 0:
-            if not str(value).lower().startswith('http'):
-                raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
+        if (
+            value is not None
+            and len(value) > 0
+            and not str(value).lower().startswith('http')
+        ):
+            raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
         return value
 
     ws_url = Unicode(default_value=None, allow_none=True, config=True,
@@ -60,18 +63,20 @@ class GatewayClient(SingletonConfigurable):
     @default('ws_url')
     def _ws_url_default(self):
         default_value = os.environ.get(self.ws_url_env)
-        if default_value is None:
-            if self.gateway_enabled:
-                default_value = self.url.lower().replace('http', 'ws')
+        if default_value is None and self.gateway_enabled:
+            default_value = self.url.lower().replace('http', 'ws')
         return default_value
 
     @validate('ws_url')
     def _ws_url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'ws'
-        if value is not None and len(value) > 0:
-            if not str(value).lower().startswith('ws'):
-                raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
+        if (
+            value is not None
+            and len(value) > 0
+            and not str(value).lower().startswith('ws')
+        ):
+            raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
         return value
 
     kernels_endpoint_default_value = '/api/kernels'
@@ -398,12 +403,11 @@ class GatewayKernelManager(MappingKernelManager):
         try:
             response = yield gateway_request(kernel_url, method='GET')
         except web.HTTPError as error:
-            if error.status_code == 404:
-                self.log.warn("Kernel not found at: %s" % kernel_url)
-                self.remove_kernel(kernel_id)
-                kernel = None
-            else:
+            if error.status_code != 404:
                 raise
+            self.log.warn("Kernel not found at: %s" % kernel_url)
+            self.remove_kernel(kernel_id)
+            kernel = None
         else:
             kernel = json_decode(response.body)
             self._kernels[kernel_id] = kernel

@@ -26,7 +26,7 @@ class TreeHandler(IPythonHandler):
     def generate_page_title(self, path):
         comps = path.split('/')
         if len(comps) > 3:
-            for i in range(len(comps)-2):
+            for _ in range(len(comps)-2):
                 comps.pop(0)
         page_title = url_path_join(*comps)
         if page_title:
