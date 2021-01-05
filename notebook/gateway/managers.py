@@ -419,6 +419,8 @@ class GatewayKernelManager(MappingKernelManager):
 
             if '198' in kernel_name:
                 kernel_name = kernel_name.split('-')[0]
+            # kernel_url = self._get_kernel_endpoint_url()
+            # self.log.info("Request new kernel at: %s" % kernel_url)
 
             # Let KERNEL_USERNAME take precedent over http_user config option.
             if os.environ.get('KERNEL_USERNAME') is None and GatewayClient.instance().http_user:
@@ -507,6 +509,9 @@ class GatewayKernelManager(MappingKernelManager):
             self.log.info(f'response from listing kernels from = {i, response}')
             kernels = json_decode(response.body)
             self.log.info(f'kernels response from listing kernels from = {i, response, kernels}')
+
+        # response = yield gateway_request(kernel_url, method='GET')
+        # kernels = json_decode(response.body)
         self._kernels = {x['id']: x for x in kernels}
         raise gen.Return(kernels)
 
@@ -677,6 +682,11 @@ class GatewayKernelSpecManager(KernelSpecManager):
                         # kernel_spec['kernelspecs'][key] = key + '198'
             # self.log.info(f'resspeconse = {kernel_specs, response.body}')
         print('list_kernel_spec==>', kernel_specs)
+# =======
+#         self.log.info("Request list kernel specs at: %s", kernel_spec_url)
+#         response = yield gateway_request(kernel_spec_url, method='GET')
+#         kernel_specs = json_decode(response.body)
+# >>>>>>> 06e4f4cb3d9cffa103073cc55515766728e5a65b
         raise gen.Return(kernel_specs)
 
     @gen.coroutine

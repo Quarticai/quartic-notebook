@@ -472,31 +472,31 @@ def shutdown_server(server_info, timeout=5, log=None):
     req = HTTPRequest(url + 'api/shutdown', method='POST', body=b'', headers={
         'Authorization': 'token ' + server_info['token']
     })
-    if log: log.debug("POST request to %sapi/shutdown", url)
+    if log: log.info("POST request to %sapi/shutdown", url)
     AsyncHTTPClient.configure(None, resolver=resolver)
     HTTPClient(AsyncHTTPClient).fetch(req)
 
     # Poll to see if it shut down.
     for _ in range(timeout*10):
         if not check_pid(pid):
-            if log: log.debug("Server PID %s is gone", pid)
+            if log: log.info("Server PID %s is gone", pid)
             return True
         time.sleep(0.1)
 
     if sys.platform.startswith('win'):
         return False
 
-    if log: log.debug("SIGTERM to PID %s", pid)
+    if log: log.info("SIGTERM to PID %s", pid)
     os.kill(pid, signal.SIGTERM)
 
     # Poll to see if it shut down.
     for _ in range(timeout * 10):
         if not check_pid(pid):
-            if log: log.debug("Server PID %s is gone", pid)
+            if log: log.info("Server PID %s is gone", pid)
             return True
         time.sleep(0.1)
 
-    if log: log.debug("SIGKILL to PID %s", pid)
+    if log: log.info("SIGKILL to PID %s", pid)
     os.kill(pid, signal.SIGKILL)
     return True  # SIGKILL cannot be caught
 

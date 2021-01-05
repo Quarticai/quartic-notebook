@@ -110,7 +110,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
             if isinstance(message, bytes):
                 binary = True
             super().write_message(message, binary=binary)
-        elif self.log.isEnabledFor(logging.DEBUG):
+        elif self.log.isEnabledFor(logging.info):
             msg_summary = WebSocketChannelsHandler._get_message_summary(json_decode(utf8(message)))
             self.log.info("Notebook client closed websocket connection - message dropped: {}".format(msg_summary))
 
@@ -118,6 +118,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.log.info("Closing websocket connection %s", self.request.path)
         for gateway in self.gateways:
             gateway.on_close()
+        # self.gateway.on_close()
         super().on_close()
 
     @staticmethod
@@ -178,7 +179,6 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
         if not self.disconnected and fut.exception() is None:  # prevent concurrent.futures._base.CancelledError
             self.ws = fut.result()
-            self.log.info(f'self.ws={self.ws}')
             self.log.info(f'self.ws={self.ws}')
             self.log.info("Connection is ready: ws: {}".format(self.ws))
         else:
