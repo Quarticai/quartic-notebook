@@ -197,8 +197,7 @@ class IPythonHandler(AuthenticatedHandler):
 
     @property
     def ignore_minified_js(self):
-        """Wether to user bundle in template. (*.min files)
-        
+        """Whether to user bundle in template. (*.min files)
         Mainly use for development and avoid file recompilation
         """
         return self.settings.get('ignore_minified_js', False)
@@ -214,10 +213,11 @@ class IPythonHandler(AuthenticatedHandler):
 
     @property
     async def get_user_data(self):
-        """Use torando to request Quartic's API to get user data."""
+        """Use tornado to request Quartic's API to get user data."""
         http_client = httpclient.AsyncHTTPClient()
         template_vars = self.settings.get('jinja_template_vars', {})
-        site_url = template_vars["site_url"] if(template_vars and "site_url" in template_vars) else 'http://localhost:8000'
+        site_url = template_vars["site_url"] if(template_vars and "site_url" in template_vars) \
+            else 'http://localhost:8000'
         cookie = {
             "Cookie" : self.request.headers['Cookie']
         }

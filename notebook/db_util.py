@@ -25,8 +25,8 @@ class PostgresUtils:
         self.db_config = {
             'NAME': 'contexalyze',
             'USER': 'postgres',
-            'PASSWORD': 'password',
-            'HOST': 'localhost',
+            'PASSWORD': 'postgres',
+            'HOST': 'postgres',
             'PORT': '5432'
         }
         self.conn = self.__create_new_conn__()
@@ -50,7 +50,9 @@ class PostgresUtils:
                     f'Error creating connection to PostgreSQL, {e})')
 
     def __get_connection__(self):
-        "Return connection if active else create new"
+        """
+        :return: connection if active else create new
+        """
         return self.__create_new_conn__() if self.conn.closed else self.conn
 
     def __execute_query__(self, conn, query, fetch_after=True):
