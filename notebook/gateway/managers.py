@@ -281,7 +281,7 @@ class GatewayClient(SingletonConfigurable):
         kwargs.update(self._static_args)
         return kwargs
 
-# No changes in this class.
+
 @gen.coroutine
 def gateway_request(endpoint, **kwargs):
     """
@@ -586,7 +586,6 @@ class GatewayKernelManager(MappingKernelManager):
             self.remove_kernel(kernel_id)
 
 
-#TODO: Check this Class.
 class GatewayKernelSpecManager(KernelSpecManager):
 
     def __init__(self, **kwargs):
@@ -609,7 +608,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
             return '?user='.join([default_endpoint, kernel_user])
         return default_endpoint
 
-    #TODO: Check this method.
     def _get_kernelspecs_endpoint_url(self, kernel_name=None):
         """Builds a url for the kernels endpoint
 
@@ -617,7 +615,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         ----------
         kernel_name: kernel name (optional)
         """
-        self.log.info("DANGER _get_kernelspecs_endpoint_url")
+        self.log.info("Entered a method which is not used. _get_kernelspecs_endpoint_url")
         self.log.info(f"kernel_name={kernel_name}")
         if kernel_name:
             self.log.info(f'kernel name = {kernel_name}')
@@ -627,7 +625,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
         return self.base_endpoints
 
-    # Done with this method.
+
     @gen.coroutine
     def get_all_specs(self):
         """
@@ -639,8 +637,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
         """
         fetched_kspecs = yield self.list_kernel_specs()
         remote_kspecs = [fetched_kspec.get('kernelspecs') for fetched_kspec in fetched_kspecs]
-
-        # self.log.info('get_all_specs remote_kspecs==>', remote_kspecs)
         raise gen.Return(remote_kspecs)
 
     @gen.coroutine
@@ -704,7 +700,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
         raise gen.Return(_kernel_specs)
 
-    #TODO: Check this method.
     @gen.coroutine
     def get_kernel_spec(self, kernel_name, **kwargs):
         """Get kernel spec for kernel_name.
@@ -714,9 +709,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         kernel_name : str
             The name of the kernel.
         """
-        self.log.info('get_kernel_spec Danger Zone')
-        self.log.info("Danger Zone entered")
-        # TODO update the logic.
+        self.log.info('Entered a method which is not used. get_kernel_spec')
         self.log.info(f'kernel name in danger zone = {kernel_name}')
         kernel_spec_url = self._get_kernelspecs_endpoint_url(kernel_name=str(kernel_name))
         self.log.info("Request kernel spec at: %s" % kernel_spec_url)
@@ -737,7 +730,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
         raise gen.Return(kernel_spec)
 
-    #TODO: Check this method.
     @gen.coroutine
     def get_kernel_spec_resource(self, kernel_name, path):
         """
@@ -750,8 +742,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         path : str
             The name of the desired resource
         """
-        self.log.info('Danger Zone self.get_kernel_spec_resource')
-        self.log.info('kernel name')
+        self.log.info('Entered a method which is not used. self.get_kernel_spec_resource')
         kernel_spec_resource_url = url_path_join(self.base_resource_endpoint, str(kernel_name), str(path))
         self.log.info("Request kernel spec resource '{}' at: {}".format(path, kernel_spec_resource_url))
         try:
@@ -766,7 +757,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
         raise gen.Return(kernel_spec_resource)
 
 
-# This class is done.
 class GatewaySessionManager(SessionManager):
     kernel_manager = Instance('notebook.gateway.managers.GatewayKernelManager')
 

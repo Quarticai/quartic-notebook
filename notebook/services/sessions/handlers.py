@@ -53,8 +53,6 @@ class SessionRootHandler(APIHandler):
         except KeyError as e:
             raise web.HTTPError(400, "Missing field in JSON data: type") from e
 
-        self.log.info(f'model={model}')
-
         name = model.get('name', None)
         kernel = model.get('kernel', {})
         kernel_name = kernel.get('name', None)

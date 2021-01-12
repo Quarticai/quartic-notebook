@@ -32,6 +32,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
     kernel_id = None
     ping_callback = None
 
+
     def check_origin(self, origin=None):
         return IPythonHandler.check_origin(self, origin)
 
@@ -123,7 +124,6 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.log.info("Closing websocket connection %s", self.request.path)
         for gateway in self.gateways:
             gateway.on_close()
-        # self.gateway.on_close()
         super().on_close()
 
     @staticmethod
