@@ -362,14 +362,13 @@ class MappingKernelManager(MultiKernelManager):
         self._check_kernel_id(kernel_id)
         kernel = self._kernels[kernel_id]
 
-        model = {
+        return {
             "id": kernel_id,
             "name": kernel.kernel_name,
             "last_activity": isoformat(kernel.last_activity),
             "execution_state": kernel.execution_state,
             "connections": self._kernel_connections[kernel_id],
         }
-        return model
 
     def list_kernels(self):
         """Returns a list of kernel_id's of kernels running."""
@@ -423,22 +422,25 @@ class MappingKernelManager(MultiKernelManager):
         """Start idle culler if 'cull_idle_timeout' is greater than zero.
         Regardless of that value, set flag that we've been here.
         """
-        if not self._initialized_culler and self.cull_idle_timeout > 0:
-            if self._culler_callback is None:
-                loop = IOLoop.current()
-                if self.cull_interval <= 0:  # handle case where user set invalid value
-                    self.log.warning("Invalid value for 'cull_interval' detected (%s) - using default value (%s).",
-                        self.cull_interval, self.cull_interval_default)
-                    self.cull_interval = self.cull_interval_default
-                self._culler_callback = PeriodicCallback(
-                    self.cull_kernels, 1000*self.cull_interval)
-                self.log.info("Culling kernels with idle durations > %s seconds at %s second intervals ...",
-                    self.cull_idle_timeout, self.cull_interval)
-                if self.cull_busy:
-                    self.log.info("Culling kernels even if busy")
-                if self.cull_connected:
-                    self.log.info("Culling kernels even with connected clients")
-                self._culler_callback.start()
+        if (
+            not self._initialized_culler
+            and self.cull_idle_timeout > 0
+            and self._culler_callback is None
+        ):
+            loop = IOLoop.current()
+            if self.cull_interval <= 0:  # handle case where user set invalid value
+                self.log.warning("Invalid value for 'cull_interval' detected (%s) - using default value (%s).",
+                    self.cull_interval, self.cull_interval_default)
+                self.cull_interval = self.cull_interval_default
+            self._culler_callback = PeriodicCallback(
+                self.cull_kernels, 1000*self.cull_interval)
+            self.log.info("Culling kernels with idle durations > %s seconds at %s second intervals ...",
+                self.cull_idle_timeout, self.cull_interval)
+            if self.cull_busy:
+                self.log.info("Culling kernels even if busy")
+            if self.cull_connected:
+                self.log.info("Culling kernels even with connected clients")
+            self._culler_callback.start()
 
         self._initialized_culler = True
 

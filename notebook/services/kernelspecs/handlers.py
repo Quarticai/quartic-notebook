@@ -59,8 +59,7 @@ class MainKernelSpecHandler(APIHandler):
     def get(self):
         ksm = self.kernel_spec_manager
         km = self.kernel_manager
-        model = {}
-        model['default'] = km.default_kernel_name
+        model = {'default': km.default_kernel_name}
         model['kernelspecs'] = specs = {}
         kspecs = yield maybe_future(ksm.get_all_specs())
         for kernel_name, kernel_info in kspecs.items():
