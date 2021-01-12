@@ -217,9 +217,7 @@ define([
 
     KernelSelector.prototype._set_kernel = function (selected) {
         /** Actually set the kernel (kernelspecs have been loaded) */
-        console.log("selected", selected)
-        console.log("this.kernelspecs", this.kernelspecs)
-        console.log("current_selection", this.current_selection)
+
 
         if (selected.name === this.current_selection) {
             // only trigger event if value changed
@@ -229,18 +227,11 @@ define([
         var kernelspecs = this.kernelspecs;
         let kernelspec = 0;
         for ( kernelspec in this.kernelspecs ) {
-            console.log('kernelspec', kernelspec)
-            console.log('kernelspec["name"]', this.kernelspecs[kernelspec]['name'])
             if ( selected.name === this.kernelspecs[kernelspec]['name']) {
                 ks = this.kernelspecs[kernelspec];
                 break;
             }
         }
-        console.log('ks after loop', ks)
-
-
-
-        // ks = kernelspecs[selected.name];
 
         if (ks === undefined) {
             var available = _sorted_names(kernelspecs);
@@ -274,9 +265,6 @@ define([
         if (this.notebook._session_starting &&
             this.notebook.session.kernel.name !== ks.name) {
             console.error("Cannot change kernel while waiting for pending session start.");
-            console.log('this.notebook._session_starting', this.notebook._session_starting)
-            console.log('this.notebook.session.kernel', this.notebook.session.kernel)
-            console.log('this.notebook.session.kernel.name', this.notebook.session.kernel.name)
             return;
 
         }
