@@ -34,7 +34,6 @@ class SessionRootHandler(APIHandler):
         sm = self.session_manager
 
         model = self.get_json_body()
-        self.log.info(f'json body={self.get_json_body()}')
 
         if model is None:
             raise web.HTTPError(400, "No JSON data provided")
