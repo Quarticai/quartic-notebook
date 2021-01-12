@@ -66,30 +66,20 @@ class MainKernelSpecHandler(APIHandler):
         km = self.kernel_manager
         model = {}
         model['default'] = km.default_kernel_name
-        # self.log.info(f'km.default_kernel_name={km.default_kernel_name}')
         model['kernelspecs'] = specs = {}
-        # self.log.info(f'kernel_spec_manager ==> {ksm}')
-        # self.log.info(f'kernel_manager ==> {km}')
         kspecs = yield maybe_future(ksm.get_all_specs())
-        # self.log.info(f'get kernel specs: ==> {kspecs}')
-        # self.log.info(f'get kernel specs type: ==> {type(kspecs)}')
         for kspec in kspecs:
-            # self.log.info(f'kspec ==> {kspec}')
             for kernel_name, kernel_info in kspec.items():
-                # self.log.info(f'kernel_name={kernel_name}')
-                # self.log.info(f'kernel_info={kernel_info}')
                 try:
                     if is_kernelspec_model(kernel_info):
-                        d = kernel_info
+                        _kernel_info = kernel_info
                     else:
-                        d = kernelspec_model(self, kernel_name, kernel_info['spec'], kernel_info['resource_dir'])
+                        _kernel_info = kernelspec_model(self, kernel_name, kernel_info['spec'], kernel_info['resource_dir'])
                 except Exception:
                     self.log.error("Failed to load kernel spec: '%s'", kernel_name, exc_info=True)
                     continue
-                specs[kernel_name] = d
-                # self.log.info(f"spec={specs}")
+                specs[kernel_name] = _kernel_info
         self.set_header("Content-Type", 'application/json')
-        self.log.info(f'json.dumps(model)={json.dumps(model)}')
         self.finish(json.dumps(model))
 
 

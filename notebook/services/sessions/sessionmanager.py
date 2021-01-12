@@ -81,7 +81,15 @@ class SessionManager(LoggingConfigurable):
     @gen.coroutine
     def create_session(self, path=None, name=None, type=None, kernel_name=None, kernel_id=None,
                        mlnode_name=None):
-        """Creates a session and returns its model"""
+        """
+        Creates a session and returns its model
+        :param path: Path of the kernel.
+        :param name: Name f the kernel session
+        :param type: type o the kernel.
+        :param kernel_name: Name of the kernel.
+        :param kernel_id:  Id of the kernel.
+        :param mlnode_name: Mlnode name.
+        """
         session_id = self.new_session_id()
         if kernel_id is not None and kernel_id in self.kernel_manager:
             pass
@@ -95,11 +103,17 @@ class SessionManager(LoggingConfigurable):
 
     @gen.coroutine
     def start_kernel_for_session(self, session_id, path, name, type, kernel_name, mlnode_name):
-        """Start a new kernel for a given session."""
+        """
+        Start a new kernel for a given session.
+        :param session_id: Session ID
+        :param path: path of kernel.
+        :param name: Name of the kernel session.
+        :param type: Type of the kernel.
+        :param kernel_name: Name of the kernel name.
+        :param mlnode_name: Name of the mlnode.
+        """
         # allow contents manager to specify kernels cwd
-        self.log.info(f'Inside start_kernel_for_session mlnode_name={mlnode_name}')
         kernel_path = self.contents_manager.get_kernel_path(path=path)
-        self.log.info(f'expect kernel_manager={self.kernel_manager}')
         kernel_id = yield maybe_future(
             self.kernel_manager.start_kernel(path=kernel_path, kernel_name=kernel_name, mlnode_name=mlnode_name)
         )

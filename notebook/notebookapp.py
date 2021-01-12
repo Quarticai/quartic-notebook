@@ -1,5 +1,3 @@
-#TODO: Update kernel manager related things here.
-
 """A tornado based Jupyter notebook server."""
 
 # Copyright (c) Jupyter Development Team.
@@ -40,7 +38,6 @@ except ImportError:
     # Windows
     resource = None
 
-# from .db_util import PostgresUtils
 from base64 import encodebytes
 from jinja2 import Environment, FileSystemLoader
 from notebook.transutils import trans, _
@@ -1846,10 +1843,6 @@ class NotebookApp(JupyterApp):
                 url += '\n or %s' % self._concat_token(self._tcp_url('127.0.0.1'))
         return url
 
-    # @property
-    # def db(self):
-    #     return PostgresUtils()
-
     @property
     def connection_url(self):
         if self.sock:
@@ -2093,11 +2086,6 @@ class NotebookApp(JupyterApp):
         self.init_server_extensions()
         self.init_mime_overrides()
         self.init_shutdown_no_activity()
-        # self.db
-        # _users = self.db.get_users()
-        # _ml_nodes = self.db.get_mlnodes()
-        # self.log.info(f'users={_users}')
-        # self.log.info(f'mlnodes={_ml_nodes}')
 
     def cleanup_kernels(self):
         """Shutdown all kernels.

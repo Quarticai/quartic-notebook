@@ -304,7 +304,6 @@ define([
         
         this.events.on('spec_changed.Kernel', function(event, data) {
             var existing_spec = that.metadata.kernelspec;
-            console.log('data', data)
             that.metadata.kernelspec = {
                 name: data.name,
                 display_name: data.spec.display_name,
