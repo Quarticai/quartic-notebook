@@ -19,7 +19,9 @@ from ...utils import maybe_future, url_path_join, url_unescape
 
 
 def kernelspec_model(handler, name, spec_dict, resource_dir):
-    """Load a KernelSpec by name and return the REST API model"""
+    """
+    Load a KernelSpec by name and return the REST API model
+    """
     d = {
         'name': name,
         'spec': spec_dict,
@@ -48,8 +50,11 @@ def kernelspec_model(handler, name, spec_dict, resource_dir):
 
 
 def is_kernelspec_model(spec_dict):
-    """Returns True if spec_dict is already in proper form.  This will occur when using a gateway."""
-    return isinstance(spec_dict, dict) and 'name' in spec_dict and 'spec' in spec_dict and 'resources' in spec_dict
+    """
+    Returns True if spec_dict is already in proper form.  This will occur when using a gateway.
+    """
+    return isinstance(spec_dict, dict) and 'name' in spec_dict and 'spec' in spec_dict and 'resources' in spec_dict \
+           and 'node_name' in spec_dict
 
 
 class MainKernelSpecHandler(APIHandler):
@@ -61,14 +66,18 @@ class MainKernelSpecHandler(APIHandler):
         km = self.kernel_manager
         model = {}
         model['default'] = km.default_kernel_name
+        # self.log.info(f'km.default_kernel_name={km.default_kernel_name}')
         model['kernelspecs'] = specs = {}
-        print('kernel_spec_manager ==>', ksm)
-        print('kernel_manager ==>', km)
+        # self.log.info(f'kernel_spec_manager ==> {ksm}')
+        # self.log.info(f'kernel_manager ==> {km}')
         kspecs = yield maybe_future(ksm.get_all_specs())
-        print('get kernel specs: ==>', kspecs)
+        # self.log.info(f'get kernel specs: ==> {kspecs}')
+        # self.log.info(f'get kernel specs type: ==> {type(kspecs)}')
         for kspec in kspecs:
-            print('kspec ==>', kspec)
+            # self.log.info(f'kspec ==> {kspec}')
             for kernel_name, kernel_info in kspec.items():
+                # self.log.info(f'kernel_name={kernel_name}')
+                # self.log.info(f'kernel_info={kernel_info}')
                 try:
                     if is_kernelspec_model(kernel_info):
                         d = kernel_info
@@ -77,11 +86,10 @@ class MainKernelSpecHandler(APIHandler):
                 except Exception:
                     self.log.error("Failed to load kernel spec: '%s'", kernel_name, exc_info=True)
                     continue
-                if kernel_name in specs:
-                    specs[kernel_name + '2'] = d
                 specs[kernel_name] = d
-                self.log.info(f"spec={specs}")
+                # self.log.info(f"spec={specs}")
         self.set_header("Content-Type", 'application/json')
+        self.log.info(f'json.dumps(model)={json.dumps(model)}')
         self.finish(json.dumps(model))
 
 
