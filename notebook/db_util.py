@@ -1,13 +1,11 @@
-# import psycopg2
-# from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-# from psycopg2 import ProgrammingError
-# import psycopg2.extras
-# from psycopg2.extras import NamedTupleCursor
+# Db util class which take care of executing queries.
 
 import os
 
 import django
 from django.conf import settings
+
+# PG values.
 PG_DB_USER = os.environ.get('PG_DB_USER', '')
 PG_DB_NAME = os.environ.get('PG_DB_NAME', '')
 PG_DB_PASS = os.environ.get('PG_DB_PASS', '')
@@ -44,39 +42,26 @@ django.setup()
 from deming.models import MLNode, KernelSession
 
 
-
 class ExecuteQueries:
     """
-    Class to write the logic of raw queries
+    This class contains all the helper methods for executing queries using django orms.
+    The logic of  django orm is kept here so that we don't repeat the imports and setup django in different files.
     """
 
-    # def get_users(self):
-    #     """
-    #     #TODO: Remove the method if not required, this is dummy method to test the and list the connections.
-    #     """
-    #
-    #     result = self.db.__run_query__('select * from deming_core_enterpriseuser;')
-    #
-    #     return result
-
-    
     def get_mlnodes(self):
         """
-        Get all the mlnodes that are in the MLNode table.
+        Get all the mlnode instances that are present in the MLNode table.
+        :return: List of Mlnode instances.
         """
-        # self.conn = self.db.__get_connection__()
-        # result = self.db.__execute_query__(self.conn, 'select * from deming_core_mlnode')
-        #
-        # self.conn.close()
 
         return MLNode.objects.all()
 
     
     def get_ml_node(self, column_name, column_value):
         """
-        Get ml node info for the given column name and value.
-        :param column_name: (str) Name of the column
-        :param column_value: Value of column
+        Get ml node instances for the given column name and value.
+        :param column_name: (str) Name of the column.
+        :param column_value: (str) Value of column.
         :return: List of Mlnode instances.
         """
         kwargs = {column_name: column_value}
@@ -86,7 +71,8 @@ class ExecuteQueries:
         """
         Delete the entry in the Kernel Session table for the given column name and Value.
         :param column_name: (str) Name of the column
-        :param column_value: Value of column
+        :param column_value: (str) Value of column
+        :return: List of KernelSession instances.
         """
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).delete()
@@ -94,9 +80,9 @@ class ExecuteQueries:
 
     def get_kernel_session(self, column_name, column_value):
         """
-        Get ml node info for the given column name and value.
+        Get kernel session instances for the given column name and value.
         :param column_name: (str) Name of the column
-        :param column_value: Value of column
+        :param column_value: (str) Value of column
         :return: List of KernelSession instances.
         """
         kwargs = {column_name: column_value}
@@ -104,10 +90,11 @@ class ExecuteQueries:
 
     def create_kernel_session(self, _field_values):
         """
-        Create kernel session with provided field values.
+        Create kernel session instance with provided values.
         :param _field_values: (Dict) Dictionary of field values.
-        :return: result of the query.
+        :return: KernelSession instance.
         """
+
         _kernel_id = _field_values.get("kernel_id", None)
         _kernel_name   = _field_values.get("kernel_name", None)
         mlnode_name = _field_values['mlnode_name']
