@@ -341,21 +341,11 @@ class GatewayKernelManager(MappingKernelManager):
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
         self.base_endpoints = base_endpoints
 
-    #TODO: Need to check.
+    # No changes required.
     def __contains__(self, kernel_id):
-        self.log.info(f'__contains__')
-        self.log.info(f'kernel ID={kernel_id}')
-        for key, value in self.kernel_url_id_map:
-            self.log.info(f'kernel ID={kernel_id}')
-            if kernel_id in value:
-                self.log.info(f'kernel id FOUND!!!!!!!!!!! url={key}')
-                self.log.info(f'kernel id FOUND!!!!!!!!!!! kernel_id={kernel_id}')
-                self.log.info(f'kernel id FOUND!!!!!!!!!!! value={value}')
-                self.log.info(f'continue')
-                continue
 
-
-        return kernel_id in self._kernels
+        _return = self.db.check_kernel_sessions('kernel_id', kernel_id)
+        return _return
 
     # No changes required.
     def remove_kernel(self, kernel_id):
@@ -369,8 +359,10 @@ class GatewayKernelManager(MappingKernelManager):
         except KeyError:
             pass
 
-    #TODO: Update this method to pick kernel session instance and get the kernel name.
-    def _get_kernel_endpoint_url(self, kernel_id=None, kernel_name=None, mlnode_name=None):
+    # No changes required.
+    def _get_kernel_endpoint_url(self, kernel_id=None,
+                                 kernel_name=None,
+                                 mlnode_name=None):
         """Builds a url for the kernels endpoint
 
         Parameters
@@ -389,24 +381,13 @@ class GatewayKernelManager(MappingKernelManager):
 
         if kernel_id:
             kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
-            self.log.info(f'get_kernel_session after query={kernel_session}')
-            if kernel_session:
-                #TODO: Update logic to have kernel_name
-                self.log.info(f'get_kernel_session after query={kernel_session}')
-                # __url__ = mlnode
-                self.log.info(f'get_kernel_session={kernel_session}')
+            ml_node = kernel_session[0].ml_node
 
-            for key, value in self.kernel_url_id_map.items():
-                self.log.info(f'kernel ID={kernel_id}')
-                if kernel_id in value:
-                    self.log.info(f'kernel id FOUND!!!!!!!!!!! url={key}')
-                    _base_endpoint = key
-                    break
-
-            return url_path_join(_base_endpoint, url_escape(str(kernel_id)))
+            return url_path_join(str(ml_node.ip_address), url_escape(str(kernel_id)))
 
         return _base_endpoint
 
+    # No changes required.
     @gen.coroutine
     def start_kernel(self, kernel_id=None, path=None, **kwargs):
         """
@@ -525,15 +506,13 @@ class GatewayKernelManager(MappingKernelManager):
         """
         kernels = {}
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
-        for i in self.base_endpoints:
-            self.log.info(f'listing kernels from = {i}')
-            response = yield gateway_request(i, method='GET')
-            self.log.info(f'response from listing kernels from = {i, response}')
+        for base_endpoint in self.base_endpoints:
+            self.log.info(f'listing kernels from = {base_endpoint}')
+            response = yield gateway_request(base_endpoint, method='GET')
+            self.log.info(f'response from listing kernels from = {base_endpoint, response}')
             kernels = json_decode(response.body)
-            self.log.info(f'kernels response from listing kernels from = {i, response, kernels}')
+            self.log.info(f'kernels response from listing kernels from = {base_endpoint, response, kernels}')
 
-        # response = yield gateway_request(kernel_url, method='GET')
-        # kernels = json_decode(response.body)
         self._kernels = {x['id']: x for x in kernels}
         raise gen.Return(kernels)
 
@@ -558,7 +537,7 @@ class GatewayKernelManager(MappingKernelManager):
         self.log.info("Shutdown kernel response: %d %s", response.code, response.reason)
         self.remove_kernel(kernel_id)
 
-    #TODO: Check from here this method is being called.
+    # Nothing to be done.
     # DONE: This method is called from handler.
     @gen.coroutine
     def restart_kernel(self, kernel_id, now=False, **kwargs):

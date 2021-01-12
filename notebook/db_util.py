@@ -116,3 +116,14 @@ class ExecuteQueries:
                                ml_node=MLNode.objects.filter(name=mlnode_name)[0])
         result.save()
         return result
+
+    def check_kernel_sessions(self, column_name, column_value):
+        """
+        Check if there is an entry wih the following field and value.
+        :param column_name: Name of the Column. ( String )
+        :param column_value: Value of the Column. ( String )
+        :return: Boolean Value.
+        """
+
+        kwargs = {column_name: column_value}
+        return KernelSession.objects.filter(**kwargs).exists()
