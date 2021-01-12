@@ -4,6 +4,8 @@ import os
 
 import django
 from django.conf import settings
+
+# PG values.
 PG_DB_USER = os.environ.get('PG_DB_USER', '')
 PG_DB_NAME = os.environ.get('PG_DB_NAME', '')
 PG_DB_PASS = os.environ.get('PG_DB_PASS', '')
@@ -38,7 +40,6 @@ django.setup()
 
 
 from deming.models import MLNode, KernelSession
-
 
 
 class ExecuteQueries:
@@ -97,7 +98,6 @@ class ExecuteQueries:
         _kernel_id = _field_values.get("kernel_id", None)
         _kernel_name   = _field_values.get("kernel_name", None)
         mlnode_name = _field_values['mlnode_name']
-
         result = KernelSession(kernel_id=_kernel_id,
                                kernel_name=_kernel_name,
                                ml_node=MLNode.objects.filter(name=mlnode_name)[0])
