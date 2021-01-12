@@ -4,6 +4,7 @@ from psycopg2 import ProgrammingError
 import psycopg2.extras
 from psycopg2.extras import NamedTupleCursor
 
+
 class PostgresUtils:
     """
     Collection of all Postgres utility functions
@@ -76,8 +77,24 @@ class PostgresUtils:
         except ProgrammingError as e:
             raise RuntimeError('Error excuting query "%s"\n %s' % (query, e))
 
+    def __run_query__(self, query):
+        """
+        handles connection to db and running the query.
+        :param query:  (str) Query to execute.
+        :return: Result from the query ( List )
+        """
+        self.conn = self.__get_connection__()
+        result = self.__execute_query__(self.conn, query)
+        self.conn.close()
+
+        return result
+
 
 class ExecuteQueries:
+    """
+    Class to write the logic of raw queries
+    """
+
     @property
     def db(self):
         return PostgresUtils()
@@ -92,16 +109,14 @@ class ExecuteQueries:
         #TODO: Remove the method if not required, this is dummy method to test the and list the connections.
         """
 
-        self.conn = self.db.__get_connection__()
-        result = self.db.__execute_query__(self.conn, 'select * from deming_core_enterpriseuser;')
-        self.db.conn.close()
+        result = self.db.__run_query__('select * from deming_core_enterpriseuser;')
 
         return result
 
     
     def get_mlnodes(self):
         """
-        Get all the mlnodes that are in the database.
+        Get all the mlnodes that are in the MLNode table.
         """
         self.conn = self.db.__get_connection__()
         result = self.db.__execute_query__(self.conn, 'select * from deming_core_mlnode')
@@ -112,7 +127,11 @@ class ExecuteQueries:
 
     
     def get_ml_node(self, column_name, column_value):
-        """Get ml node info of particular ip
+        """
+        Get ml node info for the given column name and value.
+        :param column_name: (str) Name of the column
+        :param column_value: Value of column
+        :return: List of Mlnode instances.
         """
         self.conn = self.db.__get_connection__()
         result = self.db.__execute_query__(self.conn, f"select * from deming_core_mlnode where {column_name}='{column_value}'")
@@ -120,3 +139,45 @@ class ExecuteQueries:
         self.conn.close()
 
         return result
+
+    def delete_kernel_session(self, column_name, column_value):
+        """
+        Delete the entry in the Kernel Session table for the given column name and Value.
+        :param column_name: (str) Name of the column
+        :param column_value: Value of column
+        """
+
+
+        result = self.db.__run_query__(f"delete from deming_core_kernelsession where {column_name}='{column_value}'")
+
+        return result
+
+
+    def get_kernel_session(self, column_name, column_value):
+        """
+        Get ml node info for the given column name and value.
+        :param column_name: (str) Name of the column
+        :param column_value: Value of column
+        :return: List of Mlnode instances.
+        """
+        result = self.db.__run_query__(f"select * from deming_core_kernelsession where {column_name}='{column_value}'")
+
+        return result
+    def create_kernel_session(self, _field_values):
+        """
+        Create kernel session with provided field values.
+        :param _field_values: (Dict) Dictionary of field values.
+        :return: result of the query.
+        """
+        try:
+            _query = f'INSERT INTO deming_core_kernelsession(kernel_id, kernel_name) VALUES ' \
+                     f'({_field_values.get("kernel_id", None)}, {_field_values.get("kernel_name", None)}, ' \
+                     f'(SELECT id FROM deming_core_mlnode WHERE name = {_field_values["mlnode_name"]}))'
+            print(f'_query={_query}')
+            result = self.db.__run_query__(_query)
+            return result
+
+        except Exception as e:
+            print(f"Exception raised ={e}")
+
+

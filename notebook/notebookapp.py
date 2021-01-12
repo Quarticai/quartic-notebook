@@ -1,3 +1,5 @@
+#TODO: Update kernel manager related things here.
+
 """A tornado based Jupyter notebook server."""
 
 # Copyright (c) Jupyter Development Team.
@@ -2124,7 +2126,11 @@ class NotebookApp(JupyterApp):
         run_sync(terminal_manager.terminate_all())
 
     def notebook_info(self, kernel_count=True):
-        "Return the current working directory and the server url information"
+        """
+        Return the current working directory and the server url information
+        :param kernel_count:
+        :return:
+        """
         info = self.contents_manager.info_string() + "\n"
         if kernel_count:
             n_kernels = len(self.kernel_manager.list_kernel_ids())
