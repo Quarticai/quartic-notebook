@@ -64,8 +64,7 @@ class MainKernelSpecHandler(APIHandler):
     def get(self):
         ksm = self.kernel_spec_manager
         km = self.kernel_manager
-        model = {}
-        model['default'] = km.default_kernel_name
+        model = {'default': km.default_kernel_name}
         # self.log.info(f'km.default_kernel_name={km.default_kernel_name}')
         model['kernelspecs'] = specs = {}
         # self.log.info(f'kernel_spec_manager ==> {ksm}')
