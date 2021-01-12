@@ -377,8 +377,8 @@ class GatewayKernelManager(MappingKernelManager):
         if kernel_id:
             kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
             ml_node = kernel_session[0].ml_node
-
-            return url_path_join(str(ml_node.ip_address), url_escape(str(kernel_id)))
+            _url =  f'http://{str(ml_node.ip_address)}:8888/api/kernels'
+            return url_path_join(_url, url_escape(str(kernel_id)))
 
         return _base_endpoint
 
@@ -462,7 +462,7 @@ class GatewayKernelManager(MappingKernelManager):
                 raise
         else:
             kernel = json_decode(response.body)
-            mlnode_name = self.db.get_mlnodes('ip_address', kernel_url.split(':')[0])[0]
+            mlnode_name = self.db.get_ml_node('ip_address', kernel_url.split(':')[1].split('//')[-1] )[0]
             _field_values = {
                 'kernel_id': str(kernel['id']),
                 'mlnode_name': mlnode_name.name,
