@@ -83,9 +83,7 @@ class SessionManager(LoggingConfigurable):
                        mlnode_name=None):
         """Creates a session and returns its model"""
         session_id = self.new_session_id()
-        if kernel_id is not None and kernel_id in self.kernel_manager:
-            pass
-        else:
+        if kernel_id is None or kernel_id not in self.kernel_manager:
             kernel_id = yield self.start_kernel_for_session(session_id, path, name, type, kernel_name, mlnode_name)
         result = yield maybe_future(
             self.save_session(session_id, path=path, name=name, type=type, kernel_id=kernel_id)
@@ -176,10 +174,7 @@ class SessionManager(LoggingConfigurable):
             row = None
 
         if row is None:
-            q = []
-            for key, value in kwargs.items():
-                q.append("%s=%r" % (key, value))
-
+            q = ["%s=%r" % (key, value) for key, value in kwargs.items()]
             raise web.HTTPError(404, u'Session not found: %s' % (', '.join(q)))
 
         model = yield maybe_future(self.row_to_model(row))

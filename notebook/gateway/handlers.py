@@ -61,9 +61,11 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     def initialize(self):
         self.session = Session(config=self.config)
-        gateways = []
-        for url in GatewayClient.instance().urls:
-            gateways.append(GatewayWebSocketClient(gateway_url=url))
+        gateways = [
+            GatewayWebSocketClient(gateway_url=url)
+            for url in GatewayClient.instance().urls
+        ]
+
         self.gateways = gateways
 
     @gen.coroutine
@@ -209,19 +211,18 @@ class GatewayWebSocketClient(LoggingConfigurable):
         """
         while self.ws:
             message = None
-            if not self.disconnected:
-                try:
-                    message = yield self.ws.read_message()
-                except Exception as e:
-                    self.log.error("Exception reading message from websocket: {}".format(e))  # , exc_info=True)
-                if message is None:
-                    if not self.disconnected:
-                        self.log.warning("Lost connection to Gateway: {}".format(self.kernel_id))
-                    break
-                callback(message)  # pass back to notebook client (see self.on_open and WebSocketChannelsHandler.open)
-            else:  # ws cancelled - stop reading
+            if self.disconnected:  # ws cancelled - stop reading
                 break
 
+            try:
+                message = yield self.ws.read_message()
+            except Exception as e:
+                self.log.error("Exception reading message from websocket: {}".format(e))  # , exc_info=True)
+            if message is None:
+                if not self.disconnected:
+                    self.log.warning("Lost connection to Gateway: {}".format(self.kernel_id))
+                break
+            callback(message)  # pass back to notebook client (see self.on_open and WebSocketChannelsHandler.open)
         if not self.disconnected: # if websocket is not disconnected by client, attept to reconnect to Gateway
             self.log.info("Attempting to re-establish the connection to Gateway: {}".format(self.kernel_id))
             self._connect(self.kernel_id, True)
