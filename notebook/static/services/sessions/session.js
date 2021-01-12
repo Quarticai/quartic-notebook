@@ -28,8 +28,6 @@ define([
      */
     var Session = function (options) {
         this.id = null;
-        console.log('options')
-        console.log(options)
         this.notebook_model = {
             path: options.notebook_path
         };
@@ -123,8 +121,6 @@ define([
                 error(xhr, status, err);
             }
         };
-
-        console.log('this._get_model()', this._get_model())
 
         utils.ajax(this.session_service_url, {
             processData: false,

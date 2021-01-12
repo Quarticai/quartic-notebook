@@ -20,12 +20,11 @@ from traitlets.config import SingletonConfigurable
 from ..db_util import ExecuteQueries
 import datetime
 
-# No changes in this class.
-class GatewayClient(SingletonConfigurable):
-    """This class manages the configuration.  It's its own singleton class so that we
-       can share these values across all objects.  It also contains some helper methods
-        to build request arguments out of the various config options.
 
+class GatewayClient(SingletonConfigurable):
+    """
+    This class manages the configuration. It's its own singleton class so that we can share these values across
+    all objects. It also contains some helper methods to build request arguments out of the various config options.
     """
 
     urls = Unicode(default_value=None, allow_none=True, config=True,
@@ -47,7 +46,6 @@ class GatewayClient(SingletonConfigurable):
 
     @default('urls')
     def _url_default(self):
-        self.log.info(f'self.url_env={self.url_env}')
         return os.environ.get(self.url_env)
 
     @validate('urls')
@@ -56,7 +54,7 @@ class GatewayClient(SingletonConfigurable):
         for url in proposal:
             value = url['value']
             # Ensure value, if present, starts with 'http'
-            if value is not None and len(value) > 0:
+            if value and len(value):
                 if not str(value).lower().startswith('http'):
                     raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
             values.append(value)
@@ -82,7 +80,7 @@ class GatewayClient(SingletonConfigurable):
     def _ws_url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'ws'
-        if value is not None and len(value) > 0:
+        if value and len(value):
             if not str(value).lower().startswith('ws'):
                 raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
         return value
@@ -319,20 +317,14 @@ def gateway_request(endpoint, **kwargs):
     raise gen.Return(response)
 
 
-# TODO: update this class.
+
 class GatewayKernelManager(MappingKernelManager):
     """
     Kernel manager that supports remote kernels hosted by Jupyter Kernel or Enterprise Gateway.
     """
 
-    # We'll maintain our own set of kernel ids
-    _kernels = {}
-    kernel_url_id_map = {}
     gateway_urls = GatewayClient.instance().urls
     db = ExecuteQueries()
-    for url in gateway_urls:
-        kernel_url_id_map[url_path_join(url, GatewayClient.instance().kernels_endpoint)] = []
-
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -341,34 +333,37 @@ class GatewayKernelManager(MappingKernelManager):
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
         self.base_endpoints = base_endpoints
 
-    # No changes required.
     def __contains__(self, kernel_id):
+        """
+        Check whether the given kernel id is present or not.
+        :param kernel_id: Kernel ID ( str )
+        :return: Boolean stating if it is present in the system.
+        """
 
         _return = self.db.check_kernel_sessions('kernel_id', kernel_id)
         return _return
 
-    # No changes required.
     def remove_kernel(self, kernel_id):
         """
         Complete override since we want to be more tolerant of missing keys
         """
-        try:
-            delete_kernel_entry = self.db.delete_kernel_session('kernel_id', kernel_id)
-            self.log.info(f"delete kernel entry log = {delete_kernel_entry}")
-            return self._kernels.pop(kernel_id)
-        except KeyError:
-            pass
+        # try:
+        self.db.delete_kernel_session('kernel_id', kernel_id)
+        # except KeyError:
+        #     pass
 
-    # No changes required.
     def _get_kernel_endpoint_url(self, kernel_id=None,
                                  kernel_name=None,
                                  mlnode_name=None):
-        """Builds a url for the kernels endpoint
+        """
+        Builds a url for the kernels endpoint
 
         Parameters
         ----------
         kernel_id: kernel UUID (optional)
         kernel_name: Name of the Kernel (optional). ( String )
+        mlnode_name: Name of the ml node ( Optional ) ( Sting )
+
         """
 
         _url = None
@@ -387,7 +382,6 @@ class GatewayKernelManager(MappingKernelManager):
 
         return _base_endpoint
 
-    # No changes required.
     @gen.coroutine
     def start_kernel(self, kernel_id=None, path=None, **kwargs):
         """
@@ -423,7 +417,7 @@ class GatewayKernelManager(MappingKernelManager):
             if path and kernel_env.get('KERNEL_WORKING_DIR') is None:
                 kernel_env['KERNEL_WORKING_DIR'] = kwargs['cwd']
 
-            json_body = json_encode({'name': kernel_name.replace(" ", "").lower(), 'env': kernel_env})
+            json_body = json_encode({'name': kernel_name, 'env': kernel_env})
 
             response = yield gateway_request(kernel_url, method='POST', body=json_body)
             kernel = json_decode(response.body)
@@ -434,24 +428,18 @@ class GatewayKernelManager(MappingKernelManager):
             _field_values = {
                 'kernel_id': str(kernel_id),
                 'kernel_name': str(kernel_name),
-                'created_at': datetime.datetime.now(),
-                'updated_at': datetime.datetime.now(),
                 'mlnode_name': str(mlnode_name)
             }
-            self.log.info(f'_field_values={_field_values}')
-            kernel_session = self.db.create_kernel_session(_field_values)
-            self.log.info(f'kernel_session={kernel_session}')
+
+            self.db.create_kernel_session(_field_values)
         else:
             kernel = yield self.get_kernel(kernel_id)
             kernel_id = kernel['id']
             self.log.info("Using existing kernel: %s" % kernel_id)
 
-        self._kernels[kernel_id] = kernel
-        self.kernel_url_id_map[kernel_url] =  self.kernel_url_id_map[kernel_url] + [kernel_id] if kernel_url in self.kernel_url_id_map else [kernel_id]
-
         raise gen.Return(kernel_id)
 
-    # Nothing to be done.
+
     @gen.coroutine
     def get_kernel(self, kernel_id=None, **kwargs):
         """Get kernel for kernel_id.
@@ -462,9 +450,7 @@ class GatewayKernelManager(MappingKernelManager):
             The uuid of the kernel.
         """
 
-        self.log.info(f'get_kernel kernel_id==> {kernel_id}')
         kernel_url = self._get_kernel_endpoint_url(kernel_id)
-        self.log.info("Request kernel at: %s" % kernel_url)
         try:
             response = yield gateway_request(kernel_url, method='GET')
         except web.HTTPError as error:
@@ -476,12 +462,19 @@ class GatewayKernelManager(MappingKernelManager):
                 raise
         else:
             kernel = json_decode(response.body)
-            self._kernels[kernel_id] = kernel
+            mlnode_name = self.db.get_mlnodes('ip_address', kernel_url.split(':')[0])[0]
+            _field_values = {
+                'kernel_id': str(kernel['id']),
+                'mlnode_name': mlnode_name.name,
+                'kernel_name': str(kernel['name'])
+            }
+
+            self.db.create_kernel_session(_field_values)
         self.log.info("Kernel retrieved: %s" % kernel)
         self.log.info(f"get kernel = {kernel}")
         raise gen.Return(kernel)
 
-    # Nothing to be done.
+
     @gen.coroutine
     def kernel_model(self, kernel_id):
         """Return a dictionary of kernel information described in the
@@ -516,8 +509,6 @@ class GatewayKernelManager(MappingKernelManager):
         self._kernels = {x['id']: x for x in kernels}
         raise gen.Return(kernels)
 
-    # Nothing to be done.
-    # DONE: This method is called from handler.
     @gen.coroutine
     def shutdown_kernel(self, kernel_id, now=False, restart=False):
         """Shutdown a kernel by its kernel uuid.
@@ -652,7 +643,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
         # self.log.info('get_all_specs remote_kspecs==>', remote_kspecs)
         raise gen.Return(remote_kspecs)
 
-    # Done with this method.
     @gen.coroutine
     def list_kernel_specs(self):
         """
