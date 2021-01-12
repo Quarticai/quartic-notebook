@@ -39,7 +39,7 @@ class GatewayClient(SingletonConfigurable):
     ml_nodes = ExecuteQueries().get_mlnodes()
     ml_node_urls = []
     for record in ml_nodes:
-        ml_node_urls.append(record.ip_address + ':8888')
+        ml_node_urls.append(str(record.ip_address) + ':8888')
 
     urls = ml_node_urls
 
@@ -340,7 +340,6 @@ class GatewayKernelManager(MappingKernelManager):
         for url in self.gateway_urls:
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
         self.base_endpoints = base_endpoints
-        # self.log.info(f'base_endpoint={self.base_endpoints}')
 
     #TODO: Need to check.
     def __contains__(self, kernel_id):
@@ -358,6 +357,7 @@ class GatewayKernelManager(MappingKernelManager):
 
         return kernel_id in self._kernels
 
+    # No changes required.
     def remove_kernel(self, kernel_id):
         """
         Complete override since we want to be more tolerant of missing keys
@@ -370,8 +370,7 @@ class GatewayKernelManager(MappingKernelManager):
             pass
 
     #TODO: Update this method to pick kernel session instance and get the kernel name.
-    def _get_kernel_endpoint_url(self, kernel_id=None, kernel_name=None,
-                                 mlnode_name=None):
+    def _get_kernel_endpoint_url(self, kernel_id=None, kernel_name=None, mlnode_name=None):
         """Builds a url for the kernels endpoint
 
         Parameters
@@ -379,16 +378,11 @@ class GatewayKernelManager(MappingKernelManager):
         kernel_id: kernel UUID (optional)
         kernel_name: Name of the Kernel (optional). ( String )
         """
-        self.log.info(f'_get_kernel_endpoint_url kernel_id = {kernel_id}')
-        self.log.info(f'_get_kernel_endpoint_url kernel_name = {kernel_name}')
+
         _url = None
         if not kernel_id:
-            self.log.info('Inside _get_kernel_endpoint_url')
-            self.log.info(f'mlnode_name={mlnode_name}')
-            ml_node = ExecuteQueries().get_ml_node('name', mlnode_name)
-            self.log.info(f'ml_node={ml_node}')
-            _url =  f'http://{ml_node[0].ip_address}:8888/api/kernels'
-            self.log.info(f'Calculated base_endpoint={_url}')
+            ml_node = self.db.get_ml_node('name', mlnode_name)
+            _url =  f'http://{str(ml_node[0].ip_address)}:8888/api/kernels'
 
         _base_endpoint = _url if _url else self.base_endpoints
 
@@ -436,22 +430,17 @@ class GatewayKernelManager(MappingKernelManager):
             kernel_name = kwargs.get('kernel_name', 'python3')
             mlnode_name = kwargs.get('mlnode_name', '')
             kernel_url = self._get_kernel_endpoint_url(kernel_name=kernel_name, mlnode_name=mlnode_name)
-            self.log.info(f'self.kernel_url={kernel_url}')
-            self.log.info("Request new kernel at: %s" % kernel_url)
 
             # Let KERNEL_USERNAME take precedent over http_user config option.
             if os.environ.get('KERNEL_USERNAME') is None and GatewayClient.instance().http_user:
                 os.environ['KERNEL_USERNAME'] = GatewayClient.instance().http_user
-            self.log.info("GatewayClient.instance().http_user at: %s" % GatewayClient.instance().http_user)
+
             kernel_env = {k: v for (k, v) in dict(os.environ).items() if k.startswith('KERNEL_')
                         or k in GatewayClient.instance().env_whitelist.split(",")}
-            self.log.info(f'kernel_env={kernel_env}')
+
             # Convey the full path to where this notebook file is located.
             if path and kernel_env.get('KERNEL_WORKING_DIR') is None:
                 kernel_env['KERNEL_WORKING_DIR'] = kwargs['cwd']
-
-            self.log.info(f'self kernel name={kernel_name}')
-            self.log.info(f'self kernel nv={kernel_env}')
 
             json_body = json_encode({'name': kernel_name.replace(" ", "").lower(), 'env': kernel_env})
 
@@ -460,9 +449,6 @@ class GatewayKernelManager(MappingKernelManager):
 
             kernel_id = kernel['id']
             self.log.info("Kernel started: %s" % kernel_id)
-            # Creating Entry in KernelSession Table.
-            # ml_node = ExecuteQueries().get_ml_node('name', kernel_name)
-            # self.log.info(f'mlnode={ml_node}')
 
             _field_values = {
                 'kernel_id': str(kernel_id),
@@ -471,7 +457,8 @@ class GatewayKernelManager(MappingKernelManager):
                 'updated_at': datetime.datetime.now(),
                 'mlnode_name': str(mlnode_name)
             }
-            kernel_session = ExecuteQueries().create_kernel_session(_field_values)
+            self.log.info(f'_field_values={_field_values}')
+            kernel_session = self.db.create_kernel_session(_field_values)
             self.log.info(f'kernel_session={kernel_session}')
         else:
             kernel = yield self.get_kernel(kernel_id)
@@ -480,7 +467,7 @@ class GatewayKernelManager(MappingKernelManager):
 
         self._kernels[kernel_id] = kernel
         self.kernel_url_id_map[kernel_url] =  self.kernel_url_id_map[kernel_url] + [kernel_id] if kernel_url in self.kernel_url_id_map else [kernel_id]
-        self.log.info(f"self.kernel_url_id_map[kernel_url]={self.kernel_url_id_map}")
+
         raise gen.Return(kernel_id)
 
     # Nothing to be done.
@@ -524,7 +511,7 @@ class GatewayKernelManager(MappingKernelManager):
         kernel_id : uuid
             The uuid of the kernel.
         """
-        self.log.info("RemoteKernelManager.kernel_model: %s", kernel_id)
+
         model = yield self.get_kernel(kernel_id)
         raise gen.Return(model)
 
@@ -646,9 +633,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
     @staticmethod
     def _get_endpoint_for_user_filter(default_endpoint):
-        print('_get_endpoint_for_user_filter Danger zone')
-        print(os.environ.get('KERNEL_USERNAME'))
-        print(f'default_endpoint={default_endpoint}')
 
         kernel_user = os.environ.get('KERNEL_USERNAME')
         if kernel_user:
@@ -684,10 +668,9 @@ class GatewayKernelSpecManager(KernelSpecManager):
         :return: list of kernels.
         """
         fetched_kspecs = yield self.list_kernel_specs()
-        self.log.info('get_all_specs fetched_kspecs==>', fetched_kspecs)
         remote_kspecs = [fetched_kspec.get('kernelspecs') for fetched_kspec in fetched_kspecs]
 
-        self.log.info('get_all_specs remote_kspecs==>', remote_kspecs)
+        # self.log.info('get_all_specs remote_kspecs==>', remote_kspecs)
         raise gen.Return(remote_kspecs)
 
     # Done with this method.
@@ -741,17 +724,13 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
         for key_mlnode, value_mlnode in kernel_mlnode.items():
             __kernel_specs = {'kernelspecs': {}}
-            self.log.info(f'key_mlnode={key_mlnode}')
-            self.log.info(f'value_mlnode={value_mlnode}')
             __kernel_specs__ = value_mlnode['kernelspecs']
             for key, value in __kernel_specs__.items():
                 node = ExecuteQueries().get_ml_node('ip_address', key_mlnode.split(':')[0])[0]
                 display_name = __kernel_specs__[key]['spec']['display_name'] + " " + node.name
                 __kernel_specs['kernelspecs'][display_name] = value
-                # __kernel_specs['kernelspecs'][display_name]['name'] = f'key:{__kernel_specs__[key]["spec"]["display_name"]}|mlmodel_name:{node.name}'
                 __kernel_specs['kernelspecs'][display_name]['spec']['display_name'] = display_name
                 __kernel_specs['kernelspecs'][display_name]['node_name'] = node.name
-            self.log.info(f'After updating display name __kernel_specs={__kernel_specs}')
             _kernel_specs.append(__kernel_specs)
 
         raise gen.Return(_kernel_specs)
