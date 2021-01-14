@@ -18,7 +18,6 @@ from ..utils import url_path_join
 from traitlets import Instance, Unicode, Float, Bool, default, validate, TraitError
 from traitlets.config import SingletonConfigurable
 from ..db_util import ExecuteQueries
-import datetime
 
 
 class GatewayClient(SingletonConfigurable):

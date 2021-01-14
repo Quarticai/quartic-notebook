@@ -27,6 +27,7 @@ define([
      * @param {Object} options
      */
     var Session = function (options) {
+        console.log('options',  options)
         this.id = null;
         this.notebook_model = {
             path: options.notebook_path
@@ -102,13 +103,18 @@ define([
      */
     Session.prototype.start = function (success, error) {
         var that = this;
+        console.log('In session', that.kernel)
+        console.log('In session', that.kernel_model)
         var on_success = function (data, status, xhr) {
             if (that.kernel) {
                 that.kernel.name = that.kernel_model.name;
+                that.kernel.ml_node_name = that.kernel_model.ml_node_name;
             } else {
                 var kernel_service_url = utils.url_path_join(that.base_url, "api/kernels");
                 that.kernel = new kernel.Kernel(kernel_service_url, that.ws_url, that.kernel_model.name);
             }
+            console.log('In start')
+            console.log('that.kernel', that.kernel, 'that.kernel_model', that.kernel_model)
             that.events.trigger('kernel_created.Session', {session: that, kernel: that.kernel});
             that.kernel._kernel_created(data.kernel);
             if (success) {
@@ -221,13 +227,20 @@ define([
      * @param {function} [error] - function executed on ajax error
      */
     Session.prototype.restart = function (options, success, error) {
+        console.log('In restart')
+        console.log(options)
         var that = this;
         var start = function () {
             if (options && options.notebook_path) {
+                console.log('In restart first if')
+                console.log(options)
                 that.notebook_model.path = options.notebook_path;
             }
             if (options && options.kernel_name) {
+                console.log('In restart second if')
+                console.log(options)
                 that.kernel_model.name = options.kernel_name;
+                that.kernel_model.ml_node_name = options.node_name
             }
             that.kernel_model.id = null;
             that.start(success, error);
