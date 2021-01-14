@@ -73,7 +73,7 @@ define([
                     $('<a>')
                         .attr('href', '#')
                         .click( function () {
-                            that.set_kernel(ks);
+                            that.set_kernel(ks.name);
                         })
                         .text(ks.spec.display_name)
                 )
@@ -238,20 +238,21 @@ define([
 
         var ks = undefined;
         var kernelspecs = this.kernelspecs;
-        let kernelspec = 0;
-        let display_name;
-        if  (selected.hasOwnProperty('spec')){
-            display_name = selected.spec.display_name;
-        }
-        else {
-            display_name = selected.display_name;
-        }
-        for ( kernelspec in this.kernelspecs ) {
-            if (display_name === this.kernelspecs[kernelspec]['spec']['display_name']) {
-                ks = this.kernelspecs[kernelspec];
-                break;
-            }
-        }
+        var ks = kernelspecs[selected.name];
+        // let kernelspec = 0;
+        // let display_name;
+        // if  (selected.hasOwnProperty('spec')){
+        //     display_name = selected.spec.display_name;
+        // }
+        // else {
+        //     display_name = selected.display_name;
+        // }
+        // for ( kernelspec in this.kernelspecs ) {
+        //     if (display_name === this.kernelspecs[kernelspec]['spec']['display_name']) {
+        //         ks = this.kernelspecs[kernelspec];
+        //         break;
+        //     }
+        // }
 
         console.log('ks', ks)
 
@@ -284,14 +285,6 @@ define([
                 return;
             }
         }
-
-        console.log('this.notebook._session_starting', this.notebook._session_starting)
-        // console.log('this.notebook.session.kernel', this.notebook.session.kernel)
-        if  (this.notebook._session_starting) {
-            console.log('this.notebook.session.kernel', this.notebook.session.kernel)
-            console.log('this.notebook.session.kernel ks.name', ks.name)
-        }
-
 
         if (this.notebook._session_starting &&
             this.notebook.session.kernel.name !== ks.name) {
@@ -345,7 +338,6 @@ define([
                 'Set Kernel' : {
                     class : 'btn-primary',
                     click : function () {
-                        console.log(select)
                         that.set_kernel(select.val());
                     }
                 }
@@ -392,7 +384,7 @@ define([
         this.events.on('spec_changed.Kernel', $.proxy(this._spec_changed, this));
         this.events.on('spec_not_found.Kernel', $.proxy(this._spec_not_found, this));
         this.events.on('kernel_created.Session', function (event, data) {
-            that.set_kernel(data.kernel);
+            that.set_kernel(data.kernel.name);
         });
         
         var logo_img = this.element.find("img.current_kernel_logo");

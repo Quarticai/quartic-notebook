@@ -53,8 +53,7 @@ def is_kernelspec_model(spec_dict):
     """
     Returns True if spec_dict is already in proper form.  This will occur when using a gateway.
     """
-    return isinstance(spec_dict, dict) and 'name' in spec_dict and 'spec' in spec_dict and 'resources' in spec_dict \
-           and 'node_name' in spec_dict
+    return isinstance(spec_dict, dict) and 'name' in spec_dict and 'spec' in spec_dict and 'resources' in spec_dict
 
 
 class MainKernelSpecHandler(APIHandler):

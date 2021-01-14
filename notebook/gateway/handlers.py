@@ -81,10 +81,9 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         # TODO: Update the database with user info.
         self.log.info(f"Got the user={self.current_user}")
         self.log.info(f'kwargs inside user ={kwargs}')
+
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
-        for urls in GatewayClient.instance().urls:
-            self.log.info(f'urls={urls}')
         self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}:8888')
         yield super().get(kernel_id=kernel_id, *args, **kwargs)
 
@@ -127,9 +126,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
             self.log.info("Notebook client closed websocket connection - message dropped: {}".format(msg_summary))
 
     def on_close(self):
-
         self.log.info("Closing websocket connection %s", self.request.path)
-        self.log.info(f'kernel id in on close ={self.kernel_id}')
         self.gateway.on_close()
         super().on_close()
 
@@ -163,7 +160,7 @@ class GatewayWebSocketClient(LoggingConfigurable):
         self.disconnected = False
 
     @gen.coroutine
-    def _connect(self, kernel_id, retry=False):
+    def _connect(self, kernel_id):
         # websocket is initialized before connection
 
         self.ws = None
@@ -174,11 +171,6 @@ class GatewayWebSocketClient(LoggingConfigurable):
             f'ws://{self.gateway_url}',
             GatewayClient.instance().kernels_endpoint, url_escape(kernel_id), 'channels'
         )
-        if retry:
-            ws_url = url_path_join(
-                    f'ws://{self.gateway_url}',
-                    GatewayClient.instance().kernels_endpoint, url_escape(kernel_id), 'channels'
-            )
 
         self.log.info(f'Connecting to={ws_url}')
         kwargs = {}
@@ -251,7 +243,9 @@ class GatewayWebSocketClient(LoggingConfigurable):
         )
 
     def on_message(self, message):
-        """Send message to gateway server."""
+        """
+        Send message to gateway server.
+        """
         if self.ws is None:
             loop = IOLoop.current()
             loop.add_future(
@@ -262,7 +256,9 @@ class GatewayWebSocketClient(LoggingConfigurable):
             self._write_message(message)
 
     def _write_message(self, message):
-        """Send message to gateway server."""
+        """
+        Send message to gateway server.
+        """
         try:
             if not self.disconnected and self.ws:
                 self.ws.write_message(message)
