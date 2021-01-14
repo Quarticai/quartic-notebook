@@ -18,8 +18,8 @@ from tornado.escape import url_escape, json_decode, utf8
 from ipython_genutils.py3compat import cast_unicode
 from jupyter_client.session import Session
 from traitlets.config.configurable import LoggingConfigurable
-
 from .managers import GatewayClient
+from ..db_util import ExecuteQueries
 
 # Keepalive ping interval (default: 30 seconds)
 GATEWAY_WS_PING_INTERVAL_SECS = int(os.getenv('GATEWAY_WS_PING_INTERVAL_SECS', 30))
@@ -28,9 +28,20 @@ GATEWAY_WS_PING_INTERVAL_SECS = int(os.getenv('GATEWAY_WS_PING_INTERVAL_SECS', 3
 class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     session = None
-    gateways = None
+    gateway = None
     kernel_id = None
     ping_callback = None
+    ml_node_url = None
+    db = ExecuteQueries()
+
+    def mlnode_url(self):
+        """
+        Return MlNode url for the class level kernel ID.
+        :return: Ipaddress of the URL. ( String )
+        """
+        kernel_session = self.db.get_kernel_session('kernel_id', self.kernel_id)
+        ml_node = kernel_session[0].ml_node
+        return str(ml_node.ip_address)
 
 
     def check_origin(self, origin=None):
@@ -62,19 +73,19 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     def initialize(self):
         self.session = Session(config=self.config)
-        gateways = []
-        for url in GatewayClient.instance().urls:
-            gateways.append(GatewayWebSocketClient(gateway_url=url))
-        self.gateways = gateways
 
     @gen.coroutine
     def get(self, kernel_id, *args, **kwargs):
-        self.log.info(f'kernel_id in wehbhook handler get={kernel_id} get')
+        self.log.info(f'kernel_id in webhook handler get={kernel_id} get')
         self.authenticate()
         # TODO: Update the database with user info.
         self.log.info(f"Got the user={self.current_user}")
         self.log.info(f'kwargs inside user ={kwargs}')
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
+        self.ml_node_url = self.mlnode_url()
+        for urls in GatewayClient.instance().urls:
+            self.log.info(f'urls={urls}')
+        self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}:8888')
         yield super().get(kernel_id=kernel_id, *args, **kwargs)
 
     def send_ping(self):
@@ -91,10 +102,8 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.log.info(f'kernel_id={kernel_id}, open')
         self.ping_callback = PeriodicCallback(self.send_ping, GATEWAY_WS_PING_INTERVAL_SECS * 1000)
         self.ping_callback.start()
-        self.log.info(f'on open called')
-        #TODO: Predict where does this kernel ID exists.
-        for gateway in self.gateways:
-            gateway.on_open(
+        self.log.info(f'self.gateway={self.gateway}')
+        self.gateway.on_open(
                 kernel_id=kernel_id,
                 message_callback=self.write_message,
                 compression_options=self.get_compression_options()
@@ -102,9 +111,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     def on_message(self, message):
         """Forward message to gateway web socket handler."""
-        self.log.info(f'on message called={message}')
-        for gateway in self.gateways:
-            gateway.on_message(message)
+        self.gateway.on_message(message)
 
     def write_message(self, message, binary=False):
         """
@@ -122,8 +129,8 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
     def on_close(self):
 
         self.log.info("Closing websocket connection %s", self.request.path)
-        for gateway in self.gateways:
-            gateway.on_close()
+        self.log.info(f'kernel id in on close ={self.kernel_id}')
+        self.gateway.on_close()
         super().on_close()
 
     @staticmethod
@@ -182,7 +189,9 @@ class GatewayWebSocketClient(LoggingConfigurable):
         self.ws_future.add_done_callback(self._connection_done)
 
     def _connection_done(self, fut):
-
+        self.log.info(f'self.ws in connection done={self.ws}')
+        self.log.info(f'self.disconnected={self.disconnected}')
+        self.log.info(f'fut.exception()={fut.exception()}')
         if not self.disconnected and fut.exception() is None:  # prevent concurrent.futures._base.CancelledError
             self.ws = fut.result()
             self.log.info(f'self.ws={self.ws}')
@@ -194,7 +203,8 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
     def _disconnect(self):
         self.disconnected = True
-        if self.ws is not None:
+        self.log.info(f'ws in disconnect={self.ws}')
+        if self.ws:
             # Close connection
             self.ws.close()
         elif not self.ws_future.done():
