@@ -27,6 +27,8 @@ define([
      * @param {Object} options
      */
     var Session = function (options) {
+        console.log('options')
+        console.log(options)
         this.id = null;
         this.notebook_model = {
             path: options.notebook_path
@@ -102,12 +104,15 @@ define([
     Session.prototype.start = function (success, error) {
         var that = this;
         var on_success = function (data, status, xhr) {
+            console.log('data', data)
+            console.log('that.kernel', that.kernel)
             if (that.kernel) {
                 that.kernel.name = that.kernel_model.name;
             } else {
                 var kernel_service_url = utils.url_path_join(that.base_url, "api/kernels");
                 that.kernel = new kernel.Kernel(kernel_service_url, that.ws_url, that.kernel_model.name);
             }
+            console.log('that.kernel', that.kernel)
             that.events.trigger('kernel_created.Session', {session: that, kernel: that.kernel});
             that.kernel._kernel_created(data.kernel);
             if (success) {
@@ -221,6 +226,8 @@ define([
      */
     Session.prototype.restart = function (options, success, error) {
         var that = this;
+        console.log("In restart")
+        console.log("options", options)
         var start = function () {
             if (options && options.notebook_path) {
                 that.notebook_model.path = options.notebook_path;

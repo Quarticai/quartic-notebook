@@ -401,9 +401,9 @@ class GatewayKernelManager(MappingKernelManager):
             if path:
                 kwargs['cwd'] = self.cwd_for_path(path)
             _kernel_name = kwargs.get('kernel_name', 'python3')
-            _kernel_name = _kernel_name.split('|')[0]
+            _kernel_name = _kernel_name.split('~')
             kernel_name = _kernel_name[0]
-            mlnode_id = _kernel_name[1]
+            mlnode_id = _kernel_name[-1]
             kernel_url = self._get_kernel_endpoint_url(kernel_name=kernel_name, mlnode_id=mlnode_id)
 
             # Let KERNEL_USERNAME take precedent over http_user config option.
@@ -466,7 +466,7 @@ class GatewayKernelManager(MappingKernelManager):
 
             _field_values = {
                 'kernel_id': str(kernel['id']),
-                'mlnode_name': mlnode_name.name,
+                'mlnode_id': mlnode_name.id,
                 'kernel_name': str(kernel['name'])
             }
 
@@ -694,10 +694,11 @@ class GatewayKernelSpecManager(KernelSpecManager):
             for key, value in __kernel_specs__.items():
                 node = ExecuteQueries().get_ml_node('ip_address', key_mlnode.split(':')[0])[0]
                 display_name = __kernel_specs__[key]['spec']['display_name'] + " " + node.name
-                _key = key + "|" + node.name
-                __kernel_specs['kernelspecs'][display_name] = value
-                __kernel_specs['kernelspecs'][display_name]['spec']['display_name'] = display_name
-                # __kernel_specs['kernelspecs'][display_name]['node_name'] = node.name
+                _key = key + "~" + str(node.id)
+                __kernel_specs['kernelspecs'][_key] = value
+                __kernel_specs['kernelspecs'][_key]['name'] = _key
+                __kernel_specs['kernelspecs'][_key]['spec']['display_name'] = display_name
+                __kernel_specs['kernelspecs'][_key]['node_id'] = str(node.id)
             _kernel_specs.append(__kernel_specs)
 
         raise gen.Return(_kernel_specs)

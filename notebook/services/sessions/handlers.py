@@ -56,8 +56,9 @@ class SessionRootHandler(APIHandler):
         name = model.get('name', None)
         kernel = model.get('kernel', {})
         kernel_name = kernel.get('name', None)
-        mlnode_name = kernel.get('ml_node_name', None)
         kernel_id = kernel.get('id', None)
+        mlnode_id = kernel_name.split('~')[-1]
+        self.log.info(f'mlnode_id={mlnode_id}')
 
         if not kernel_id and not kernel_name:
             self.log.info("No kernel specified, using default kernel")
@@ -84,6 +85,13 @@ class SessionRootHandler(APIHandler):
         location = url_path_join(self.base_url, 'api', 'sessions', model['id'])
         self.set_header('Location', location)
         self.set_status(201)
+        self.log.info(f'model={model}')
+        if 'kernel' in model.keys():
+            if 'name' in model['kernel'].keys():
+                _updated_name = model['kernel']['name'] + '~' + mlnode_id
+                self.log.info(f'_updated_name={_updated_name}')
+                model['kernel']['name'] = _updated_name
+        self.log.info(f'updated model={model}')
         self.finish(json.dumps(model, default=date_default))
 
 
