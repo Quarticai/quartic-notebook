@@ -79,8 +79,7 @@ class SessionManager(LoggingConfigurable):
         return unicode_type(uuid.uuid4())
 
     @gen.coroutine
-    def create_session(self, path=None, name=None, type=None, kernel_name=None, kernel_id=None,
-                       mlnode_name=None):
+    def create_session(self, path=None, name=None, type=None, kernel_name=None, kernel_id=None):
         """
         Creates a session and returns its model
         :param path: Path of the kernel.
@@ -88,13 +87,12 @@ class SessionManager(LoggingConfigurable):
         :param type: type o the kernel.
         :param kernel_name: Name of the kernel.
         :param kernel_id:  Id of the kernel.
-        :param mlnode_name: Mlnode name.
         """
         session_id = self.new_session_id()
         if kernel_id is not None and kernel_id in self.kernel_manager:
             pass
         else:
-            kernel_id = yield self.start_kernel_for_session(session_id, path, name, type, kernel_name, mlnode_name)
+            kernel_id = yield self.start_kernel_for_session(session_id, path, name, type, kernel_name)
         result = yield maybe_future(
             self.save_session(session_id, path=path, name=name, type=type, kernel_id=kernel_id)
         )
@@ -102,7 +100,7 @@ class SessionManager(LoggingConfigurable):
         raise gen.Return(result)
 
     @gen.coroutine
-    def start_kernel_for_session(self, session_id, path, name, type, kernel_name, mlnode_name):
+    def start_kernel_for_session(self, session_id, path, name, type, kernel_name):
         """
         Start a new kernel for a given session.
         :param session_id: Session ID
@@ -110,12 +108,11 @@ class SessionManager(LoggingConfigurable):
         :param name: Name of the kernel session.
         :param type: Type of the kernel.
         :param kernel_name: Name of the kernel name.
-        :param mlnode_name: Name of the mlnode.
         """
         # allow contents manager to specify kernels cwd
         kernel_path = self.contents_manager.get_kernel_path(path=path)
         kernel_id = yield maybe_future(
-            self.kernel_manager.start_kernel(path=kernel_path, kernel_name=kernel_name, mlnode_name=mlnode_name)
+            self.kernel_manager.start_kernel(path=kernel_path, kernel_name=kernel_name)
         )
         # py2-compat
         raise gen.Return(kernel_id)

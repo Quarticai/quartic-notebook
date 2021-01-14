@@ -353,7 +353,7 @@ class GatewayKernelManager(MappingKernelManager):
 
     def _get_kernel_endpoint_url(self, kernel_id=None,
                                  kernel_name=None,
-                                 mlnode_name=None):
+                                 mlnode_id=None):
         """
         Builds a url for the kernels endpoint
 
@@ -361,17 +361,16 @@ class GatewayKernelManager(MappingKernelManager):
         ----------
         kernel_id: kernel UUID (optional)
         kernel_name: Name of the Kernel (optional). ( String )
-        mlnode_name: Name of the ml node ( Optional ) ( Sting )
+        mlnode_id: ID of the ml node ( Optional ) ( UID )
 
         """
 
         _url = None
         if not kernel_id:
-            ml_node = self.db.get_ml_node('name', mlnode_name)
+            ml_node = self.db.get_ml_node('id', mlnode_id)
             _url =  f'http://{str(ml_node[0].ip_address)}:8888/api/kernels'
 
         _base_endpoint = _url if _url else self.base_endpoints
-
 
         if kernel_id:
             kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
@@ -401,9 +400,11 @@ class GatewayKernelManager(MappingKernelManager):
         if not kernel_id:
             if path:
                 kwargs['cwd'] = self.cwd_for_path(path)
-            kernel_name = kwargs.get('kernel_name', 'python3')
-            mlnode_name = kwargs.get('mlnode_name', '')
-            kernel_url = self._get_kernel_endpoint_url(kernel_name=kernel_name, mlnode_name=mlnode_name)
+            _kernel_name = kwargs.get('kernel_name', 'python3')
+            _kernel_name = _kernel_name.split('~')
+            kernel_name = _kernel_name[0]
+            mlnode_id = _kernel_name[-1]
+            kernel_url = self._get_kernel_endpoint_url(kernel_name=kernel_name, mlnode_id=mlnode_id)
 
             # Let KERNEL_USERNAME take precedent over http_user config option.
             if os.environ.get('KERNEL_USERNAME') is None and GatewayClient.instance().http_user:
@@ -427,7 +428,7 @@ class GatewayKernelManager(MappingKernelManager):
             _field_values = {
                 'kernel_id': str(kernel_id),
                 'kernel_name': str(kernel_name),
-                'mlnode_name': str(mlnode_name)
+                'mlnode_id': str(mlnode_id)
             }
 
             self.db.create_kernel_session(_field_values)
@@ -462,9 +463,10 @@ class GatewayKernelManager(MappingKernelManager):
         else:
             kernel = json_decode(response.body)
             mlnode_name = self.db.get_ml_node('ip_address', kernel_url.split(':')[1].split('//')[-1] )[0]
+
             _field_values = {
                 'kernel_id': str(kernel['id']),
-                'mlnode_name': mlnode_name.name,
+                'mlnode_id': mlnode_name.id,
                 'kernel_name': str(kernel['name'])
             }
 
@@ -692,9 +694,11 @@ class GatewayKernelSpecManager(KernelSpecManager):
             for key, value in __kernel_specs__.items():
                 node = ExecuteQueries().get_ml_node('ip_address', key_mlnode.split(':')[0])[0]
                 display_name = __kernel_specs__[key]['spec']['display_name'] + " " + node.name
-                __kernel_specs['kernelspecs'][display_name] = value
-                __kernel_specs['kernelspecs'][display_name]['spec']['display_name'] = display_name
-                __kernel_specs['kernelspecs'][display_name]['node_name'] = node.name
+                _key = key + "~" + str(node.id)
+                __kernel_specs['kernelspecs'][_key] = value
+                __kernel_specs['kernelspecs'][_key]['name'] = _key
+                __kernel_specs['kernelspecs'][_key]['spec']['display_name'] = display_name
+                __kernel_specs['kernelspecs'][_key]['node_id'] = str(node.id)
             _kernel_specs.append(__kernel_specs)
 
         raise gen.Return(_kernel_specs)

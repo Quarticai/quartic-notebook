@@ -73,7 +73,8 @@ define([
                     $('<a>')
                         .attr('href', '#')
                         .click( function () {
-                            that.set_kernel(ks);
+                            console.log('2', ks.name)
+                            that.set_kernel(ks.name);
                         })
                         .text(ks.spec.display_name)
                 )
@@ -84,7 +85,8 @@ define([
             change_select_kernel_menu.append(
                 $("<option>").attr("id", "kernel-selectmenu-"+ks.name)
                     .click( function () {
-                        that.set_kernel(ks);
+                        console.log('3', ks.name)
+                        that.set_kernel(ks.name);
                     })
                     .text(ks.spec.display_name)
             )
@@ -114,9 +116,11 @@ define([
         // update selection
         console.log('this.current_selection _spec_changed',  this.current_selection)
         console.log('ks.name _spec_changed',  ks)
-
         this.current_selection = ks.name;
-        
+
+        // #new-notebook-submenu-python3|1
+        // #new-notebook-submenu-python3
+
         // put the current kernel at the top of File > New Notebook
         var cur_kernel_entry = $("#new-notebook-submenu-" + ks.name);
         var parent = cur_kernel_entry.parent();
@@ -206,6 +210,7 @@ define([
         (name, language, display_name).
         */
         var that = this;
+        console.log('set_kernel', selected)
         if (typeof selected === 'string') {
             selected = {
                 name: selected
@@ -224,37 +229,36 @@ define([
     KernelSelector.prototype._set_kernel = function (selected) {
         /** Actually set the kernel (kernelspecs have been loaded) */
 
+
         console.log('selected', selected)
         console.log('selected.name', selected.name)
         console.log('this.current_selection', this.current_selection)
 
         console.log('this.kernelspecs', this.kernelspecs)
 
-        if (!selected.hasOwnProperty('spec') && selected.name === this.current_selection) {
+        if (selected.name === this.current_selection) {
             // only trigger event if value changed
             return;
         }
 
-        var ks = undefined;
         var kernelspecs = this.kernelspecs;
-        let kernelspec = 0;
-        let display_name;
-        if  (selected.hasOwnProperty('spec')){
-            display_name = selected.spec.display_name;
-        }
-        else {
-            display_name = selected.display_name;
-        }
-        for ( kernelspec in this.kernelspecs ) {
-            if (display_name === this.kernelspecs[kernelspec]['spec']['display_name']) {
-                ks = this.kernelspecs[kernelspec];
-                break;
-            }
-        }
+        var ks = kernelspecs[selected.name];
+        // let kernelspec = 0;
+        // let display_name;
+        // if  (selected.hasOwnProperty('spec')){
+        //     display_name = selected.spec.display_name;
+        // }
+        // else {
+        //     display_name = selected.display_name;
+        // }
+        // for ( kernelspec in this.kernelspecs ) {
+        //     if (display_name === this.kernelspecs[kernelspec]['spec']['display_name']) {
+        //         ks = this.kernelspecs[kernelspec];
+        //         break;
+        //     }
+        // }
 
         console.log('ks', ks)
-
-
 
         if (ks === undefined) {
             var available = _sorted_names(kernelspecs);
@@ -286,20 +290,13 @@ define([
             }
         }
 
-        console.log('this.notebook._session_starting', this.notebook._session_starting)
-        // console.log('this.notebook.session.kernel', this.notebook.session.kernel)
-        if  (this.notebook._session_starting) {
-            console.log('this.notebook.session.kernel', this.notebook.session.kernel)
-            console.log('this.notebook.session.kernel ks.name', ks.name)
-        }
-
-
         if (this.notebook._session_starting &&
             this.notebook.session.kernel.name !== ks.name) {
             console.error("Cannot change kernel while waiting for pending session start.");
             return;
 
         }
+
         this.current_selection = ks.name;
         this.events.trigger('spec_changed.Kernel', ks);
         console.log('ks after trigger', ks)
@@ -346,7 +343,7 @@ define([
                 'Set Kernel' : {
                     class : 'btn-primary',
                     click : function () {
-                        console.log(select)
+                        console.log('1', select.val())
                         that.set_kernel(select.val());
                     }
                 }
@@ -393,7 +390,9 @@ define([
         this.events.on('spec_changed.Kernel', $.proxy(this._spec_changed, this));
         this.events.on('spec_not_found.Kernel', $.proxy(this._spec_not_found, this));
         this.events.on('kernel_created.Session', function (event, data) {
-            that.set_kernel(data.kernel);
+            console.log(data.kernel)
+            console.log('2', data.kernel.name)
+            that.set_kernel(data.kernel.name);
         });
         
         var logo_img = this.element.find("img.current_kernel_logo");

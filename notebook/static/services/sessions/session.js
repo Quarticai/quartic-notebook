@@ -27,15 +27,15 @@ define([
      * @param {Object} options
      */
     var Session = function (options) {
-        console.log('options',  options)
+        console.log('options')
+        console.log(options)
         this.id = null;
         this.notebook_model = {
             path: options.notebook_path
         };
         this.kernel_model = {
             id: null,
-            name: options.kernel_name,
-            ml_node_name: options.node_name
+            name: options.kernel_name
         };
 
         this.base_url = options.base_url;
@@ -103,18 +103,16 @@ define([
      */
     Session.prototype.start = function (success, error) {
         var that = this;
-        console.log('In session', that.kernel)
-        console.log('In session', that.kernel_model)
         var on_success = function (data, status, xhr) {
+            console.log('data', data)
+            console.log('that.kernel', that.kernel)
             if (that.kernel) {
                 that.kernel.name = that.kernel_model.name;
-                that.kernel.ml_node_name = that.kernel_model.ml_node_name;
             } else {
                 var kernel_service_url = utils.url_path_join(that.base_url, "api/kernels");
                 that.kernel = new kernel.Kernel(kernel_service_url, that.ws_url, that.kernel_model.name);
             }
-            console.log('In start')
-            console.log('that.kernel', that.kernel, 'that.kernel_model', that.kernel_model)
+            console.log('that.kernel', that.kernel)
             that.events.trigger('kernel_created.Session', {session: that, kernel: that.kernel});
             that.kernel._kernel_created(data.kernel);
             if (success) {
@@ -227,20 +225,15 @@ define([
      * @param {function} [error] - function executed on ajax error
      */
     Session.prototype.restart = function (options, success, error) {
-        console.log('In restart')
-        console.log(options)
         var that = this;
+        console.log("In restart")
+        console.log("options", options)
         var start = function () {
             if (options && options.notebook_path) {
-                console.log('In restart first if')
-                console.log(options)
                 that.notebook_model.path = options.notebook_path;
             }
             if (options && options.kernel_name) {
-                console.log('In restart second if')
-                console.log(options)
                 that.kernel_model.name = options.kernel_name;
-                that.kernel_model.ml_node_name = options.node_name
             }
             that.kernel_model.id = null;
             that.start(success, error);
