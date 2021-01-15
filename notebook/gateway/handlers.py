@@ -79,8 +79,10 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.log.info(f'kernel_id in webhook handler get={kernel_id} get')
         self.authenticate()
         # TODO: Update the database with user info.
+        #  This will be done as a part of
+        #  https://quarticai.atlassian.net/jira/software/projects/PLT/boards/20?selectedIssue=PLT-4015
+
         self.log.info(f"Got the user={self.current_user}")
-        self.log.info(f'kwargs inside user ={kwargs}')
 
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
@@ -98,10 +100,8 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         """
         Handle web socket connection open to notebook server and delegate to gateway web socket handler
         """
-        self.log.info(f'kernel_id={kernel_id}, open')
         self.ping_callback = PeriodicCallback(self.send_ping, GATEWAY_WS_PING_INTERVAL_SECS * 1000)
         self.ping_callback.start()
-        self.log.info(f'self.gateway={self.gateway}')
         self.gateway.on_open(
                 kernel_id=kernel_id,
                 message_callback=self.write_message,
@@ -181,12 +181,9 @@ class GatewayWebSocketClient(LoggingConfigurable):
         self.ws_future.add_done_callback(self._connection_done)
 
     def _connection_done(self, fut):
-        self.log.info(f'self.ws in connection done={self.ws}')
-        self.log.info(f'self.disconnected={self.disconnected}')
-        self.log.info(f'fut.exception()={fut.exception()}')
+
         if not self.disconnected and fut.exception() is None:  # prevent concurrent.futures._base.CancelledError
             self.ws = fut.result()
-            self.log.info(f'self.ws={self.ws}')
             self.log.info("Connection is ready: ws: {}".format(self.ws))
         else:
             self.log.warning("Websocket connection has been closed via client disconnect or due to error.  "
@@ -195,7 +192,6 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
     def _disconnect(self):
         self.disconnected = True
-        self.log.info(f'ws in disconnect={self.ws}')
         if self.ws:
             # Close connection
             self.ws.close()
@@ -226,7 +222,7 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
         if not self.disconnected: # if websocket is not disconnected by client, attept to reconnect to Gateway
             self.log.info("Attempting to re-establish the connection to Gateway: {}".format(self.kernel_id))
-            self._connect(self.kernel_id, True)
+            self._connect(self.kernel_id)
             loop = IOLoop.current()
             loop.add_future(self.ws_future, lambda future: self._read_messages(callback))
 

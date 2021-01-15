@@ -346,10 +346,7 @@ class GatewayKernelManager(MappingKernelManager):
         """
         Complete override since we want to be more tolerant of missing keys
         """
-        # try:
         self.db.delete_kernel_session('kernel_id', kernel_id)
-        # except KeyError:
-        #     pass
 
     def _get_kernel_endpoint_url(self, kernel_id=None,
                                  kernel_name=None,
@@ -471,8 +468,8 @@ class GatewayKernelManager(MappingKernelManager):
             }
 
             self.db.create_kernel_session(_field_values)
+
         self.log.info("Kernel retrieved: %s" % kernel)
-        self.log.info(f"get kernel = {kernel}")
         raise gen.Return(kernel)
 
 
@@ -490,9 +487,6 @@ class GatewayKernelManager(MappingKernelManager):
         model = yield self.get_kernel(kernel_id)
         raise gen.Return(model)
 
-    #TODO: Check from where this method is being called.
-    # DONE: This method is called from handler.
-    # TODO: Convert the response to an array.
     @gen.coroutine
     def list_kernels(self, **kwargs):
         """
@@ -529,8 +523,6 @@ class GatewayKernelManager(MappingKernelManager):
         self.log.info("Shutdown kernel response: %d %s", response.code, response.reason)
         self.remove_kernel(kernel_id)
 
-    # Nothing to be done.
-    # DONE: This method is called from handler.
     @gen.coroutine
     def restart_kernel(self, kernel_id, now=False, **kwargs):
         """
@@ -546,8 +538,6 @@ class GatewayKernelManager(MappingKernelManager):
         response = yield gateway_request(kernel_url, method='POST', body=json_encode({}))
         self.log.infp("Restart kernel response: %d %s", response.code, response.reason)
 
-    # Nothing to be done.
-    # DONE: This method is called from handler.
     @gen.coroutine
     def interrupt_kernel(self, kernel_id, **kwargs):
         """Interrupt a kernel by its kernel uuid.
@@ -562,8 +552,6 @@ class GatewayKernelManager(MappingKernelManager):
         response = yield gateway_request(kernel_url, method='POST', body=json_encode({}))
         self.log.info("Interrupt kernel response: %d %s", response.code, response.reason)
 
-    # Nothing to be done.
-    # DONE: This method is called from handler.
     def shutdown_all(self, now=False):
         """
         Shutdown all kernels."""
@@ -616,12 +604,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         ----------
         kernel_name: kernel name (optional)
         """
-        self.log.info("Entered a method which is not used. _get_kernelspecs_endpoint_url")
-        self.log.info(f"kernel_name={kernel_name}")
         if kernel_name:
-            self.log.info(f'kernel name = {kernel_name}')
-            self.log.info(f'Value={url_path_join(self.base_endpoints, url_escape(kernel_name))}')
-
             return url_path_join(self.base_endpoints, url_escape(kernel_name))
 
         return self.base_endpoints
@@ -712,10 +695,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         kernel_name : str
             The name of the kernel.
         """
-        self.log.info('Entered a method which is not used. get_kernel_spec')
-        self.log.info(f'kernel name in danger zone = {kernel_name}')
         kernel_spec_url = self._get_kernelspecs_endpoint_url(kernel_name=str(kernel_name))
-        self.log.info("Request kernel spec at: %s" % kernel_spec_url)
         try:
             response = yield gateway_request(kernel_spec_url, method='GET')
         except web.HTTPError as error:
@@ -745,7 +725,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
         path : str
             The name of the desired resource
         """
-        self.log.info('Entered a method which is not used. self.get_kernel_spec_resource')
         kernel_spec_resource_url = url_path_join(self.base_resource_endpoint, str(kernel_name), str(path))
         self.log.info("Request kernel spec resource '{}' at: {}".format(path, kernel_spec_resource_url))
         try:
