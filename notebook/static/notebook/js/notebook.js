@@ -2243,7 +2243,6 @@ define([
         for (var i=0; i<ncells; i++) {
             var cell = this.get_cell(i);
             if (cell instanceof codecell.CodeCell) {
-                console.log('notebook js 1', this.session.kernel)
                 cell.set_kernel(this.session.kernel);
             }
         }
@@ -3234,16 +3233,12 @@ define([
         if (this.session === null) {
             var kernel_name = utils.get_url_param('kernel_name');
             if (kernel_name) {
-                console.log('notebook js 2', kernel_name)
                 this.kernel_selector.set_kernel(kernel_name);
             } else if (this.metadata.kernelspec) {
-                console.log('notebook js 3', this.metadata)
-                console.log('notebook js 3', this.metadata.kernelspec)
                 this.kernel_selector.set_kernel(this.metadata.kernelspec);
             } else if (this.metadata.language) {
-                // compat with IJulia, IHaskell, and other early kernels
                 // adopters that where setting a language metadata.
-                console.log('notebook js 3', i18n.msg._("(No name)"))
+                // compat with IJulia, IHaskell, and other early kernels
                 this.kernel_selector.set_kernel({
                     name: i18n.msg._("(No name)"),
                     language: this.metadata.language
