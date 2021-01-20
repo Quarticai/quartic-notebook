@@ -536,7 +536,7 @@ class GatewayKernelManager(MappingKernelManager):
         kernel_url = self._get_kernel_endpoint_url(kernel_id) + '/restart'
         self.log.info("Request restart kernel at: %s", kernel_url)
         response = yield gateway_request(kernel_url, method='POST', body=json_encode({}))
-        self.log.infp("Restart kernel response: %d %s", response.code, response.reason)
+        self.log.info("Restart kernel response: %d %s", response.code, response.reason)
 
     @gen.coroutine
     def interrupt_kernel(self, kernel_id, **kwargs):
