@@ -201,7 +201,6 @@ define([
         (name, language, display_name).
         */
         var that = this;
-        console.log('set_kernel', selected)
         if (typeof selected === 'string') {
             selected = {
                 name: selected
