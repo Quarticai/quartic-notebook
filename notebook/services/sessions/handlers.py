@@ -85,10 +85,9 @@ class SessionRootHandler(APIHandler):
         self.set_header('Location', location)
         self.set_status(201)
         self.log.info(f'model={model}')
-        if 'kernel' in model.keys():
-            if 'name' in model['kernel'].keys():
-                _updated_name = model['kernel']['name'] + '~' + mlnode_id
-                model['kernel']['name'] = _updated_name
+        if 'kernel' in model.keys() and 'name' in model['kernel'].keys():
+            _updated_name = model['kernel']['name'] + '~' + mlnode_id
+            model['kernel']['name'] = _updated_name
         self.finish(json.dumps(model, default=date_default))
 
 
