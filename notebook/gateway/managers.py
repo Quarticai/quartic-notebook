@@ -45,6 +45,12 @@ class GatewayClient(SingletonConfigurable):
 
     @default('urls')
     def _url_default(self):
+    """
+    Get's the default url.
+    Not being used anywhere in the project.
+    Since the property of the class has been changed from url -> urls,
+    it was throwing an error so updated.
+    """
         return os.environ.get(self.url_env)
 
     @validate('urls')
@@ -579,9 +585,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        some = {
-            **kwargs
-        }
         base_endpoints = []
         self.base_resource_endpoints = []
         for url in GatewayClient.instance().urls:

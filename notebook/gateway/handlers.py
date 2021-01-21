@@ -76,6 +76,9 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
 
     @gen.coroutine
     def get(self, kernel_id, *args, **kwargs):
+        """
+        Get method to get the kernel instance from the kernel id.
+        """
         self.log.info(f'kernel_id in webhook handler get={kernel_id} get')
         self.authenticate()
         # TODO: Update the database with user info.

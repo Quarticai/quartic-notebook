@@ -98,7 +98,7 @@ class ExecuteQueries:
         _kernel_id = _field_values.get("kernel_id", None)
         _kernel_name   = _field_values.get("kernel_name", None)
         mlnode_id = _field_values['mlnode_id']
-        result, created = KernelSession.objects.update_or_create(kernel_id=_kernel_id,
+        result, _ = KernelSession.objects.update_or_create(kernel_id=_kernel_id,
                                                         kernel_name=_kernel_name,
                                                         ml_node=MLNode.objects.get(id=mlnode_id))
         return result
