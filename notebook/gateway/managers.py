@@ -45,16 +45,21 @@ class GatewayClient(SingletonConfigurable):
 
     @default('urls')
     def _url_default(self):
-    """
-    Get's the default url.
-    Not being used anywhere in the project.
-    Since the property of the class has been changed from url -> urls,
-    it was throwing an error so updated.
-    """
+        """
+        Get's the default url.
+        Not being used anywhere in the project.
+        Since the property of the class has been changed from url -> urls,
+        it was throwing an error so updated.
+        """
         return os.environ.get(self.url_env)
 
     @validate('urls')
     def _url_validate(self, proposal):
+        """
+        Updated this method to loop through all the urls rather than picking up the default url.
+        :param proposal: An array of proposed urls.
+        :return: Return an array of validated urls.
+        """
         values = []
         for url in proposal:
             value = url['value']
@@ -238,6 +243,11 @@ class GatewayClient(SingletonConfigurable):
 
     @property
     def gateway_enabled(self):
+        """
+        This property validates if the urls property is null or not.
+        Updated this to validate on an array.
+        :return:
+        """
         return bool(self.urls is not None and len(self.urls) > 0)
 
     # Ensure KERNEL_LAUNCH_TIMEOUT has a default value.
@@ -399,7 +409,6 @@ class GatewayKernelManager(MappingKernelManager):
             Will be transformed to an OS path relative to root_dir.
         """
         self.log.info('Request start kernel: kernel_id=%s, path="%s"', kernel_id, path)
-        self.log.info(f'kwargs={kwargs}')
         if not kernel_id:
             if path:
                 kwargs['cwd'] = self.cwd_for_path(path)
@@ -452,7 +461,7 @@ class GatewayKernelManager(MappingKernelManager):
         kernel_id : uuid
             The uuid of the kernel.
         """
-
+        # Get the url from the kernel ID in Kernel Session Table.
         kernel_url = self._get_kernel_endpoint_url(kernel_id)
         try:
             response = yield gateway_request(kernel_url, method='GET')
@@ -464,8 +473,9 @@ class GatewayKernelManager(MappingKernelManager):
             else:
                 raise
         else:
+            # after successful response add the updated entries to the db.
             kernel = json_decode(response.body)
-            mlnode_name = self.db.get_ml_node('ip_address', kernel_url.split(':')[1].split('//')[-1] )[0]
+            mlnode_name = self.db.get_ml_node('ip_address', kernel_url.split(':')[1].split('//')[-1])[0]
 
             _field_values = {
                 'kernel_id': str(kernel['id']),
@@ -582,14 +592,18 @@ class GatewayKernelManager(MappingKernelManager):
 
 
 class GatewayKernelSpecManager(KernelSpecManager):
-
+    """
+    Kernel Spec class for remote kernels.
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         base_endpoints = []
         self.base_resource_endpoints = []
+        # Appending all the available mlnode urls.
         for url in GatewayClient.instance().urls:
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernelspecs_endpoint))
-            self.base_resource_endpoints.append(url_path_join(url, GatewayClient.instance().kernelspecs_resource_endpoint))
+            self.base_resource_endpoints.append(url_path_join(url,
+                                                              GatewayClient.instance().kernelspecs_resource_endpoint))
         self.base_endpoints = GatewayKernelSpecManager._get_endpoint_for_user_filter(base_endpoints)
 
     @staticmethod
