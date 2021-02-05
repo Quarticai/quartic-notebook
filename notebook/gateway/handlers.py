@@ -87,6 +87,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
             'user_name': self.current_user['name'],
             'kernel_id': kernel_id
         }
+        self.db.update_kernel_session(_field_values)
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
         self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}:8888')
