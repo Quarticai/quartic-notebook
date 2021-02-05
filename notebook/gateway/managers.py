@@ -517,6 +517,9 @@ class GatewayKernelManager(MappingKernelManager):
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
 
         # Fetch all the mlnodes:
+        self.log.info('Manager class')
+        for base_endpoint in self.base_endpoints:
+            self.log.info(f'base_endpoint={base_endpoint}')
 
         ml_nodes = self.db.get_mlnodes()
 
@@ -663,13 +666,22 @@ class GatewayKernelSpecManager(KernelSpecManager):
         _kernel_specs = []
 
 
+        self.log.info('list_kernel_specs Manager class')
+        for endpoint in self.base_endpoints:
+            self.log.info(f'endpoint={endpoint}')
+
+
         # Fetching all the kernels from the available MLnodes.
         ml_nodes = self.db.get_mlnodes()
 
+
         for ml_node in ml_nodes:
-            endpoint = f'http://{str(ml_node.ip_address)}:8888/api/kernels'
+            endpoint = f'http://{str(ml_node.ip_address)}:8888/api/kernelspecs'
+            self.log.info('Inisde Mlnode')
+            self.log.info(f'endpoint={endpoint}')
             response = yield gateway_request(endpoint, method='GET')
-            kernel_mlnode[endpoint] = json_decode(response.body)
+            self.log.info(f'response={response.body}')
+            kernel_mlnode[str(ml_node.ip_address)] = json_decode(response.body)
 
         """
         Since the data structure that is send by mlnodes is same. When sending the data to FE the data structure
@@ -707,7 +719,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
             __kernel_specs = {'kernelspecs': {}}
             __kernel_specs__ = value_mlnode['kernelspecs']
             for key, value in __kernel_specs__.items():
-                node = ExecuteQueries().get_ml_node('ip_address', key_mlnode.split(':')[0])[0]
+                node = ExecuteQueries().get_ml_node('ip_address', key_mlnode)[0]
                 display_name = __kernel_specs__[key]['spec']['display_name'] + " " + node.name
                 _key = key + "~" + str(node.id)
                 __kernel_specs['kernelspecs'][_key] = value
