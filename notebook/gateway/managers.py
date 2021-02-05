@@ -347,7 +347,10 @@ class GatewayKernelManager(MappingKernelManager):
         super().__init__(**kwargs)
         base_endpoints = []
         for url in self.gateway_urls:
+            k = url_path_join(url, GatewayClient.instance().kernels_endpoint)
+            self.log.info(f"changes made for ={k}")
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
+
         self.base_endpoints = base_endpoints
 
     def __contains__(self, kernel_id):
@@ -383,14 +386,14 @@ class GatewayKernelManager(MappingKernelManager):
         _url = None
         if not kernel_id:
             ml_node = self.db.get_ml_node('id', mlnode_id)
-            _url =  f'http://{str(ml_node[0].ip_address)}:8888/api/kernels'
+            _url = f'http://{str(ml_node[0].ip_address)}:8888/api/kernels'
 
-        _base_endpoint = _url if _url else self.base_endpoints
+        _base_endpoint = _url
 
         if kernel_id:
             kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
             ml_node = kernel_session[0].ml_node
-            _url =  f'http://{str(ml_node.ip_address)}:8888/api/kernels'
+            _url = f'http://{str(ml_node.ip_address)}:8888/api/kernels'
             return url_path_join(_url, url_escape(str(kernel_id)))
 
         return _base_endpoint
@@ -512,7 +515,13 @@ class GatewayKernelManager(MappingKernelManager):
         """
         kernels = {}
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
-        for base_endpoint in self.base_endpoints:
+
+        # Fetch all the mlnodes:
+
+        ml_nodes = self.db.get_mlnodes()
+
+        for ml_node in ml_nodes:
+            base_endpoint = f'http://{str(ml_node.ip_address)}:8888/api/kernels'
             self.log.info(f'listing kernels from = {base_endpoint}')
             response = yield gateway_request(base_endpoint, method='GET')
             self.log.info(f'response from listing kernels from = {base_endpoint, response}')
@@ -597,6 +606,8 @@ class GatewayKernelSpecManager(KernelSpecManager):
     """
     Kernel Spec class for remote kernels.
     """
+    db = ExecuteQueries()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         base_endpoints = []
@@ -653,9 +664,11 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
 
         # Fetching all the kernels from the available MLnodes.
+        ml_nodes = self.db.get_mlnodes()
 
-        for endpoint in self.base_endpoints:
-            response = yield gateway_request('http://' + endpoint, method='GET')
+        for ml_node in ml_nodes:
+            endpoint = f'http://{str(ml_node.ip_address)}:8888/api/kernels'
+            response = yield gateway_request(endpoint, method='GET')
             kernel_mlnode[endpoint] = json_decode(response.body)
 
         """
@@ -744,7 +757,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         path : str
             The name of the desired resource
         """
-        kernel_spec_resource_url = url_path_join(self.base_resource_endpoint, str(kernel_name), str(path))
+        kernel_spec_resource_url = url_path_join(self.base_resource_endpoints, str(kernel_name), str(path))
         self.log.info("Request kernel spec resource '{}' at: {}".format(path, kernel_spec_resource_url))
         try:
             response = yield gateway_request(kernel_spec_resource_url, method='GET')

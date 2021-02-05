@@ -42,7 +42,7 @@ settings.configure(
 django.setup()
 
 
-from deming.models import MLNode, KernelSession
+from deming.models import EnterpriseUser, KernelSession, MLNode
 
 
 class ExecuteQueries:
@@ -59,7 +59,6 @@ class ExecuteQueries:
 
         return MLNode.objects.all()
 
-    
     def get_ml_node(self, column_name, column_value):
         """
         Get ml node instances for the given column name and value.
@@ -79,7 +78,6 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).delete()
-
 
     def get_kernel_session(self, column_name, column_value):
         """
@@ -116,3 +114,24 @@ class ExecuteQueries:
 
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).exists()
+
+    def update_kernel_session(self, _field_values):
+        """
+        Update the kernel session values.
+        :param _field_values: (Dict) Dictionary of field values.
+        """
+        try:
+            kernel_session = KernelSession.objects.get(kernel_id=_field_values['kernel_id'])
+
+            if 'user_name' in _field_values.keys():
+                user = EnterpriseUser.objects.get(user_name=_field_values['user_name'])
+                kernel_session.enterprise_user = user
+
+            kernel_session.save()
+
+        except Exception as e:
+            print(f'Error occured in updating kernel session ={e}')
+
+
+
+
