@@ -348,8 +348,6 @@ class GatewayKernelManager(MappingKernelManager):
         super().__init__(**kwargs)
         base_endpoints = []
         for url in self.gateway_urls:
-            k = url_path_join(url, GatewayClient.instance().kernels_endpoint)
-            self.log.info(f"changes made for ={k}")
             base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
 
         self.base_endpoints = base_endpoints
@@ -518,11 +516,7 @@ class GatewayKernelManager(MappingKernelManager):
         kernels = {}
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
 
-        # Fetch all the mlnodes:
-        self.log.info('Manager class')
-        for base_endpoint in self.base_endpoints:
-            self.log.info(f'base_endpoint={base_endpoint}')
-
+        # Fetch all the mlnodes address stored in the db.
         ml_nodes = self.db.get_mlnode_address()
 
         for ml_node in ml_nodes:
@@ -666,12 +660,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
 
         kernel_mlnode = {}
         _kernel_specs = []
-
-
-        self.log.info('list_kernel_specs Manager class')
-        for endpoint in self.base_endpoints:
-            self.log.info(f'endpoint={endpoint}')
-
 
         # Fetching all the kernels from the available MLnodes.
         ml_nodes = self.db.get_mlnode_address()
