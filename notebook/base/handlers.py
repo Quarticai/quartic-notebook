@@ -74,8 +74,7 @@ class AuthenticatedHandler(web.RequestHandler):
         ])
 
     def set_default_headers(self):
-        headers = {}
-        headers["X-Content-Type-Options"] = "nosniff"
+        headers = {"X-Content-Type-Options": "nosniff"}
         headers.update(self.settings.get('headers', {}))
 
         headers["Content-Security-Policy"] = self.content_security_policy
@@ -162,7 +161,7 @@ class AuthenticatedHandler(web.RequestHandler):
     def logged_in(self):
         """Is a user currently logged in?"""
         user = self.get_current_user()
-        return (user and not user == 'anonymous')
+        return user and user != 'anonymous'
 
     @property
     def login_handler(self):
@@ -342,10 +341,9 @@ class IPythonHandler(AuthenticatedHandler):
         # client sends a "Sec-Websocket-Origin" header and in 13 it's
         # simply "Origin".
         if "Origin" in self.request.headers:
-            origin = self.request.headers.get("Origin")
+            return self.request.headers.get("Origin")
         else:
-            origin = self.request.headers.get("Sec-Websocket-Origin", None)
-        return origin
+            return self.request.headers.get("Sec-Websocket-Origin", None)
 
     # origin_to_satisfy_tornado is present because tornado requires
     # check_origin to take an origin argument, but we don't use it
@@ -632,11 +630,10 @@ class APIHandler(IPythonHandler):
 
     @property
     def content_security_policy(self):
-        csp = '; '.join([
+        return '; '.join([
                 super().content_security_policy,
                 "default-src 'none'",
             ])
-        return csp
 
     # set _track_activity = False on API handlers that shouldn't track activity
     _track_activity = True
@@ -726,12 +723,11 @@ class AuthenticatedFileHandler(IPythonHandler, web.StaticFileHandler):
             name = path
         if name.endswith('.ipynb'):
             return 'application/x-ipynb+json'
+        cur_mime = mimetypes.guess_type(name)[0]
+        if cur_mime == 'text/plain':
+            return 'text/plain; charset=UTF-8'
         else:
-            cur_mime = mimetypes.guess_type(name)[0]
-            if cur_mime == 'text/plain':
-                return 'text/plain; charset=UTF-8'
-            else:
-                return super().get_content_type()
+            return super().get_content_type()
 
     def set_headers(self):
         super().set_headers()
