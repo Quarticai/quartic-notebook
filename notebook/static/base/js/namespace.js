@@ -73,7 +73,11 @@ define(function(){
     // tree
     jglobal('SessionList','tree/js/sessionlist');
 
+<<<<<<< Updated upstream
     Jupyter.version = "plt.4122.0";
+=======
+    Jupyter.version = "plt.4452.0";
+>>>>>>> Stashed changes
     Jupyter._target = '_blank';
 
     return Jupyter;
