@@ -138,11 +138,11 @@ class ExecuteQueries:
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
         """
-        _addr = []
         mlnodes = EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types)
-        for mlnode in mlnodes:
-            _addr.append(f'http://{str(mlnode.ip_address)}:{mlnode.config["port"]}')
-        return _addr
+        return [
+            f'http://{str(mlnode.ip_address)}:{mlnode.config["port"]}'
+            for mlnode in mlnodes
+        ]
 
     def get_mlnode_address_with_field(self, column_name, column_value):
         """
