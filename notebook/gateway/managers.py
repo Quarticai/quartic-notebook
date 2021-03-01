@@ -677,31 +677,32 @@ class GatewayKernelSpecManager(KernelSpecManager):
                 kernel_mlnode[str(_ip)] = json_decode(response.body)
             except Exception as e:
                 self.log.info("gateway request failed::::", str(e))
+
         """
         Since the data structure that is send by mlnodes is same. When sending the data to FE the data structure
         would be updated. Avoiding that by creating a unique keys. Assuming the name of mlnode to be unique.
         For example:
-        {'168.62.201.192/api/kernelspecs': 
-            {'default': 'python3', 'kernelspecs': 
-                {'python3': 
-                    {'name': 'python3', 'spec': 
-                                        {'argv': 
-                                            ['/opt/conda/bin/python', '-m', 'ipykernel_launcher', '-f', 
-                                            '{connection_file}'], 'env': {}, 'display_name': 'Python 3', 
-                                            'language': 'python', 'interrupt_mode': 'signal', 'metadata': {}}, 
-                                            'resources': {'logo-64x64': '/kernelspecs/python3/logo-64x64.png', 
-                                            'logo-32x32': '/kernelspecs/python3/logo-32x32.png'}}, 'spylon-kernel': 
-                                            {'name': 'spylon-kernel', 'spec': {'argv': ['/opt/conda/bin/python', '-m', 
-                                            'spylon_kernel', '-f', '{connection_file}'], 
-                                            'env': {'PYTHONUNBUFFERED': '1', 'SPARK_SUBMIT_OPTS': 
-                                            '-Dscala.usejavacp=true'}, 'display_name': 'spylon-kernel', 
+        {'168.62.201.192/api/kernelspecs':
+            {'default': 'python3', 'kernelspecs':
+                {'python3':
+                    {'name': 'python3', 'spec':
+                                        {'argv':
+                                            ['/opt/conda/bin/python', '-m', 'ipykernel_launcher', '-f',
+                                            '{connection_file}'], 'env': {}, 'display_name': 'Python 3',
+                                            'language': 'python', 'interrupt_mode': 'signal', 'metadata': {}},
+                                            'resources': {'logo-64x64': '/kernelspecs/python3/logo-64x64.png',
+                                            'logo-32x32': '/kernelspecs/python3/logo-32x32.png'}}, 'spylon-kernel':
+                                            {'name': 'spylon-kernel', 'spec': {'argv': ['/opt/conda/bin/python', '-m',
+                                            'spylon_kernel', '-f', '{connection_file}'],
+                                            'env': {'PYTHONUNBUFFERED': '1', 'SPARK_SUBMIT_OPTS':
+                                            '-Dscala.usejavacp=true'}, 'display_name': 'spylon-kernel',
                                             'language': 'scala', 'interrupt_mode': 'signal', 'metadata': {}},
-                                             'resources': {'logo-64x64': '/kernelspecs/spylon-kernel/logo-64x64.png', 
-                                             'logo-32x32': '/kernelspecs/spylon-kernel/logo-32x32.png'}}, 
-                                             'ir': {'name': 'ir', 'spec': {'argv': ['R', '--slave', '-e', 
-                                             'IRkernel::main()', '--args', '{connection_file}'], 'env': {}, 
-                                             'display_name': 'R', 'language': 'R', 'interrupt_mode': 'signal', 
-                                             'metadata': {}}, 'resources': {'kernel.js': '/kernelspecs/ir/kernel.js', 
+                                             'resources': {'logo-64x64': '/kernelspecs/spylon-kernel/logo-64x64.png',
+                                             'logo-32x32': '/kernelspecs/spylon-kernel/logo-32x32.png'}},
+                                             'ir': {'name': 'ir', 'spec': {'argv': ['R', '--slave', '-e',
+                                             'IRkernel::main()', '--args', '{connection_file}'], 'env': {},
+                                             'display_name': 'R', 'language': 'R', 'interrupt_mode': 'signal',
+                                             'metadata': {}}, 'resources': {'kernel.js': '/kernelspecs/ir/kernel.js',
                                              'logo-64x64': '/kernelspecs/ir/logo-64x64.png'}
                                         }
                     }
