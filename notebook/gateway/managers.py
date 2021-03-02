@@ -67,9 +67,8 @@ class GatewayClient(SingletonConfigurable):
         for url in proposal:
             value = url['value']
             # Ensure value, if present, starts with 'http'
-            if value and len(value):
-                if not str(value).lower().startswith('http'):
-                    raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
+            if value and len(value) and not str(value).lower().startswith('http'):
+                raise TraitError("GatewayClient url must start with 'http': '%r'" % value)
             values.append(value)
         return proposal
 
@@ -84,18 +83,16 @@ class GatewayClient(SingletonConfigurable):
     @default('ws_url')
     def _ws_url_default(self):
         default_value = os.environ.get(self.ws_url_env)
-        if default_value is None:
-            if self.gateway_enabled:
-                default_value = self.url.lower().replace('http', 'ws')
+        if default_value is None and self.gateway_enabled:
+            default_value = self.url.lower().replace('http', 'ws')
         return default_value
 
     @validate('ws_url')
     def _ws_url_validate(self, proposal):
         value = proposal['value']
         # Ensure value, if present, starts with 'ws'
-        if value and len(value):
-            if not str(value).lower().startswith('ws'):
-                raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
+        if value and len(value) and not str(value).lower().startswith('ws'):
+            raise TraitError("GatewayClient ws_url must start with 'ws': '%r'" % value)
         return value
 
     kernels_endpoint_default_value = '/api/kernels'
@@ -350,9 +347,10 @@ class GatewayKernelManager(MappingKernelManager):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        base_endpoints = []
-        for url in self.gateway_urls:
-            base_endpoints.append(url_path_join(url, GatewayClient.instance().kernels_endpoint))
+        base_endpoints = [
+            url_path_join(url, GatewayClient.instance().kernels_endpoint)
+            for url in self.gateway_urls
+        ]
 
         self.base_endpoints = base_endpoints
 
@@ -363,8 +361,7 @@ class GatewayKernelManager(MappingKernelManager):
         :return: Boolean stating if it is present in the system.
         """
 
-        _return = self.db.check_kernel_sessions('kernel_id', kernel_id)
-        return _return
+        return self.db.check_kernel_sessions('kernel_id', kernel_id)
 
     def remove_kernel(self, kernel_id):
         """
@@ -475,12 +472,11 @@ class GatewayKernelManager(MappingKernelManager):
         try:
             response = yield gateway_request(kernel_url, method='GET')
         except web.HTTPError as error:
-            if error.status_code == 404:
-                self.log.warn("Kernel not found at: %s" % kernel_url)
-                self.remove_kernel(kernel_id)
-                kernel = None
-            else:
+            if error.status_code != 404:
                 raise
+            self.log.warn("Kernel not found at: %s" % kernel_url)
+            self.remove_kernel(kernel_id)
+            kernel = None
         else:
             # after successful response add the updated entries to the db.
             kernel = json_decode(response.body)
@@ -681,8 +677,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
                 kernel_mlnode[str(_ip)] = json_decode(response.body)
             except Exception as e:
                 self.log.info("gateway request failed::::", str(e))
-                pass
-
         """
         Since the data structure that is send by mlnodes is same. When sending the data to FE the data structure
         would be updated. Avoiding that by creating a unique keys. Assuming the name of mlnode to be unique.
