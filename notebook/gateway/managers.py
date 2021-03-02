@@ -677,7 +677,6 @@ class GatewayKernelSpecManager(KernelSpecManager):
                 kernel_mlnode[str(_ip)] = json_decode(response.body)
             except Exception as e:
                 self.log.info("gateway request failed::::", str(e))
-
         """
         Since the data structure that is send by mlnodes is same. When sending the data to FE the data structure
         would be updated. Avoiding that by creating a unique keys. Assuming the name of mlnode to be unique.
