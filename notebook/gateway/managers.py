@@ -38,9 +38,11 @@ class GatewayClient(SingletonConfigurable):
     ml_nodes = ExecuteQueries().get_mlnodes()
     ml_node_urls = []
     for record in ml_nodes:
-        ml_node_urls.append(str(record.ip_address) + ':8888')
+        ml_node_urls.append(str(record.ip_address))
 
     urls = ml_node_urls
+
+    print(f'urls={urls}')
 
     urls_env = 'JUPYTER_GATEWAY_URL'
 
@@ -215,9 +217,9 @@ class GatewayClient(SingletonConfigurable):
     def _auth_token_default(self):
         return os.environ.get(self.auth_token_env, '')
 
-    validate_cert_default_value = True
+    validate_cert_default_value = False
     validate_cert_env = 'JUPYTER_GATEWAY_VALIDATE_CERT'
-    validate_cert = Bool(default_value=validate_cert_default_value, config=True,
+    validate_cert = Bool(default_value=validate_cert_default_value, config=False,
         help="""For HTTPS requests, determines if server's certificate should be validated or not.
         (JUPYTER_GATEWAY_VALIDATE_CERT env var)"""
     )
@@ -277,7 +279,7 @@ class GatewayClient(SingletonConfigurable):
             })
         self._static_args['connect_timeout'] = self.connect_timeout
         self._static_args['request_timeout'] = self.request_timeout
-        self._static_args['validate_cert'] = self.validate_cert
+        self._static_args['validate_cert'] = False
         if self.client_cert:
             self._static_args['client_cert'] = self.client_cert
             self._static_args['client_key'] = self.client_key
@@ -297,6 +299,7 @@ class GatewayClient(SingletonConfigurable):
             self.init_static_args()
 
         kwargs.update(self._static_args)
+        self.log.info(f"kwargs = {kwargs}")
         return kwargs
 
 
@@ -307,6 +310,7 @@ def gateway_request(endpoint, **kwargs):
     """
     client = AsyncHTTPClient()
     kwargs = GatewayClient.instance().load_connection_args(**kwargs)
+
     try:
         response = yield client.fetch(endpoint, **kwargs)
     # Trap a set of common exceptions so that we can inform the user that their Gateway url is incorrect
@@ -480,7 +484,8 @@ class GatewayKernelManager(MappingKernelManager):
         else:
             # after successful response add the updated entries to the db.
             kernel = json_decode(response.body)
-            mlnode_name = self.db.get_ml_node('ip_address', kernel_url.split(':')[1].split('//')[-1])[0]
+            kernel_ip = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', kernel_url).group()
+            mlnode_name = self.db.get_ml_node('ip_address', kernel_ip)[0]
 
             _field_values = {
                 'kernel_id': str(kernel['id']),
@@ -678,7 +683,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         Since the data structure that is send by mlnodes is same. When sending the data to FE the data structure
         would be updated. Avoiding that by creating a unique keys. Assuming the name of mlnode to be unique.
         For example:
-        {'168.62.201.192:8888/api/kernelspecs': 
+        {'168.62.201.192/api/kernelspecs': 
             {'default': 'python3', 'kernelspecs': 
                 {'python3': 
                     {'name': 'python3', 'spec': 
@@ -711,7 +716,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
             __kernel_specs__ = value_mlnode['kernelspecs']
             for key, value in __kernel_specs__.items():
                 node = self.db.get_ml_node('ip_address', key_mlnode)[0]
-                display_name = __kernel_specs__[key]['spec']['display_name'] + " " + node.name
+                display_name = node.name
                 _key = key + "~" + str(node.id)
                 __kernel_specs['kernelspecs'][_key] = value
                 __kernel_specs['kernelspecs'][_key]['name'] = _key

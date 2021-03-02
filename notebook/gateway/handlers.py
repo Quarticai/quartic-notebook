@@ -90,7 +90,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.db.update_kernel_session(_field_values)
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
-        self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}:8888')
+        self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}')
         yield super().get(kernel_id=kernel_id, *args, **kwargs)
 
     def send_ping(self):
@@ -171,13 +171,15 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
         # get the data from the kernel session.
         ws_url = url_path_join(
-            f'ws://{self.gateway_url}',
+            f'wss://{self.gateway_url}',
             GatewayClient.instance().kernels_endpoint, url_escape(kernel_id), 'channels'
         )
 
         self.log.info(f'Connecting to={ws_url}')
         kwargs = {}
         kwargs = GatewayClient.instance().load_connection_args(**kwargs)
+
+        self.log.info(f"kwargs ws in ={kwargs}")
 
         request = HTTPRequest(ws_url, **kwargs)
         self.ws_future = websocket_connect(request)

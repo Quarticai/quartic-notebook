@@ -100,8 +100,8 @@ class ExecuteQueries:
         _kernel_name   = _field_values.get("kernel_name", None)
         mlnode_id = _field_values['mlnode_id']
         result, _ = KernelSession.objects.update_or_create(kernel_id=_kernel_id,
-                                                        kernel_name=_kernel_name,
-                                                        ml_node=MLNode.objects.get(id=mlnode_id))
+                                                           kernel_name=_kernel_name,
+                                                           ml_node=MLNode.objects.get(id=mlnode_id))
         return result
 
     def check_kernel_sessions(self, column_name, column_value):
@@ -140,7 +140,7 @@ class ExecuteQueries:
         _addr = []
         mlnodes = MLNode.objects.all()
         for mlnode in mlnodes:
-            _addr.append(f'http://{str(mlnode.ip_address)}:{mlnode.port}')
+            _addr.append(f'https://{str(mlnode.ip_address)}')
         return _addr
 
     def get_mlnode_address_with_field(self, column_name, column_value):
@@ -152,7 +152,7 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         mlnode = MLNode.objects.get(**kwargs)
-        return f'http://{str(mlnode.ip_address)}:{mlnode.port}'
+        return f'https://{str(mlnode.ip_address)}'
 
 
 
