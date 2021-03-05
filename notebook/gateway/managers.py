@@ -42,8 +42,6 @@ class GatewayClient(SingletonConfigurable):
 
     urls = ml_node_urls
 
-    print(f'urls={urls}')
-
     urls_env = 'JUPYTER_GATEWAY_URL'
 
     @default('urls')

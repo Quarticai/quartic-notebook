@@ -179,8 +179,6 @@ class GatewayWebSocketClient(LoggingConfigurable):
         kwargs = {}
         kwargs = GatewayClient.instance().load_connection_args(**kwargs)
 
-        self.log.info(f"kwargs ws in ={kwargs}")
-
         request = HTTPRequest(ws_url, **kwargs)
         self.ws_future = websocket_connect(request)
         self.ws_future.add_done_callback(self._connection_done)
