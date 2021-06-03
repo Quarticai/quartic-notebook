@@ -50,7 +50,6 @@ from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
 
-
 class ExecuteQueries:
     """
     This class contains all the helper methods for executing queries using django orms.
