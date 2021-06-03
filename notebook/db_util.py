@@ -29,6 +29,11 @@ DATABASES = {
 settings.configure(
     DATABASES=DATABASES,
     SECRET_KEY='1234578',
+    LANGUAGE_CODE='en-us',
+    TIME_ZONE='UTC',
+    USE_I18N=True,
+    USE_L10N=True,
+    USE_TZ=True,
     INSTALLED_APPS=[
         'deming_core',
         'django.contrib.auth',
@@ -44,6 +49,7 @@ django.setup()
 from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
+
 
 class ExecuteQueries:
     """
