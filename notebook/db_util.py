@@ -58,8 +58,7 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [ edge_device for edge_device in edge_devices if edge_device.status == ACTIVE ]
-
+        return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
 
     def get_mlnodes(self):
         """
@@ -79,7 +78,7 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                         system_status__is_connected=True).filter(**kwargs))
+                                                                 system_status__is_connected=True).filter(**kwargs))
 
     def delete_kernel_session(self, column_name, column_value):
         """
@@ -152,7 +151,7 @@ class ExecuteQueries:
         :return: List of address for Mlnodes instances.
         """
         mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                            system_status__is_connected=True))
+                                                                    system_status__is_connected=True))
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
     def get_mlnode_address_with_field(self, column_name, column_value):
