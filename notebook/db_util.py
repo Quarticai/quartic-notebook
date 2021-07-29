@@ -4,7 +4,7 @@ import os
 
 import django
 from django.conf import settings
-
+from asgiref.sync import sync_to_async
 
 from deming import deming_setup
 
@@ -56,12 +56,19 @@ class ExecuteQueries:
     The logic of  django orm is kept here so that we don't repeat the imports and setup django in different files.
     """
 
-    def get_active_devices(self, edge_devices):
+    def get_active_devices(self, device_type=device_types.valid_ml_node_types, is_connected=True, filters=None):
         """
         Get active devices
-        :param edge_devices: edge device query set.
+        :param device_type: (Int) Device type.
+        :param is_connected: (Boolean) To find only connected devices.
+        :param filters: (Optional (dict)) Extra Filters for Query.
         :return: list of active edge devices.
         """
+
+        edge_devices = EdgeDevice.objects.filter(device_type__in=device_type,
+                                                 system_status__is_connected=is_connected)
+        if filters:
+            edge_devices = edge_devices.filters(**filters)
 
         return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
 
@@ -71,8 +78,7 @@ class ExecuteQueries:
         :return: List of Mlnode instances.
         """
 
-        return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True))
+        return sync_to_async(self.get_active_devices(), thread_sensitive=True)
 
     def get_ml_node(self, column_name, column_value):
         """
@@ -82,8 +88,7 @@ class ExecuteQueries:
         :return: List of Mlnode instances.
         """
         kwargs = {column_name: column_value}
-        return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True).filter(**kwargs))
+        return sync_to_async(self.get_active_devices(filters=kwargs), thread_sensitive=True)
 
     def delete_kernel_session(self, column_name, column_value):
         """
@@ -155,8 +160,7 @@ class ExecuteQueries:
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
         """
-        mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                    system_status__is_connected=True))
+        mlnodes = sync_to_async(self.get_active_devices(), thread_sensitive=True)
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
     def get_mlnode_address_with_field(self, column_name, column_value):

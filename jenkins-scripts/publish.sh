@@ -8,8 +8,6 @@ echo $PWD
 set -ex
 echo "$BRANCH_NAME"
 
-
-pip install pip==20.2.3
 make build
 
 NAME=quartic_notebook

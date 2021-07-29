@@ -482,7 +482,7 @@ class GatewayKernelManager(MappingKernelManager):
             # after successful response add the updated entries to the db.
             kernel = json_decode(response.body)
             kernel_ip = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', kernel_url).group()
-            mlnode_name = sync_to_async(self.db.get_ml_node('ip_address', kernel_ip)[0], thread_sensitive=True)
+            mlnode_name = self.db.get_ml_node('ip_address', kernel_ip)[0]
 
             _field_values = {
                 'kernel_id': str(kernel['id']),
@@ -519,7 +519,7 @@ class GatewayKernelManager(MappingKernelManager):
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
 
         # Fetch all the mlnodes address stored in the db.
-        ml_nodes = sync_to_async(self.db.get_mlnode_address(), thread_sensitive=True)
+        ml_nodes = self.db.get_mlnode_address()
 
         for ml_node in ml_nodes:
             base_endpoint = f'{ml_node}/api/kernels'
@@ -664,7 +664,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         _kernel_specs = []
 
         # Fetching all the kernels from the available MLnodes.
-        ml_nodes = sync_to_async(self.db.get_mlnode_address(), thread_sensitive=True)
+        ml_nodes = self.db.get_mlnode_address()
 
         for ml_node in ml_nodes:
             endpoint = f'{ml_node}/api/kernelspecs'
@@ -713,7 +713,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
             __kernel_specs = {'kernelspecs': {}}
             __kernel_specs__ = value_mlnode['kernelspecs']
             for key, value in __kernel_specs__.items():
-                node = sync_to_async(self.db.get_ml_node('ip_address', key_mlnode)[0], thread_sensitive=True)
+                node = self.db.get_ml_node('ip_address', key_mlnode)[0]
                 display_name = node.name
                 _key = key + "~" + str(node.id)
                 __kernel_specs['kernelspecs'][_key] = value
