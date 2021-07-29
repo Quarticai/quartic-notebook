@@ -20,6 +20,8 @@ from jupyter_client.session import Session
 from traitlets.config.configurable import LoggingConfigurable
 from .managers import GatewayClient
 from ..db_util import ExecuteQueries
+from asgiref.sync import sync_to_async
+
 
 # Keepalive ping interval (default: 30 seconds)
 GATEWAY_WS_PING_INTERVAL_SECS = int(os.getenv('GATEWAY_WS_PING_INTERVAL_SECS', 30))
@@ -39,7 +41,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         Return MlNode url for the class level kernel ID.
         :return: Ipaddress of the URL. ( String )
         """
-        kernel_session = self.db.get_kernel_session('kernel_id', self.kernel_id)
+        kernel_session = sync_to_async(self.db.get_kernel_session('kernel_id', self.kernel_id), thread_sensitive=True)
         ml_node = kernel_session[0].ml_node
         return str(ml_node.ip_address)
 
@@ -87,7 +89,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
             'user_name': self.current_user['name'],
             'kernel_id': kernel_id
         }
-        self.db.update_kernel_session(_field_values)
+        sync_to_async(self.db.update_kernel_session(_field_values), thread_sensitive=True)
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
         self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}')

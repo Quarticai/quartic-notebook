@@ -19,6 +19,7 @@ from traitlets import Instance, Unicode, Float, Bool, default, validate, TraitEr
 from traitlets.config import SingletonConfigurable
 from ..db_util import ExecuteQueries
 import re
+from asgiref.sync import sync_to_async
 
 
 class GatewayClient(SingletonConfigurable):
@@ -360,13 +361,13 @@ class GatewayKernelManager(MappingKernelManager):
         :return: Boolean stating if it is present in the system.
         """
 
-        return self.db.check_kernel_sessions('kernel_id', kernel_id)
+        return sync_to_async(self.db.check_kernel_sessions('kernel_id', kernel_id), thread_sensitive=True)
 
     def remove_kernel(self, kernel_id):
         """
         Complete override since we want to be more tolerant of missing keys
         """
-        self.db.delete_kernel_session('kernel_id', kernel_id)
+        sync_to_async(self.db.delete_kernel_session('kernel_id', kernel_id), thread_sensitive=True)
 
     def _get_kernel_endpoint_url(self, kernel_id=None,
                                  kernel_name=None,
@@ -384,14 +385,14 @@ class GatewayKernelManager(MappingKernelManager):
 
         _url = None
         if not kernel_id:
-            ml_node = self.db.get_mlnode_address_with_field('id', mlnode_id)
+            ml_node = sync_to_async(self.db.get_mlnode_address_with_field('id', mlnode_id), thread_sensitive=True)
             _url = f'{ml_node}/api/kernels'
 
         if kernel_id:
-            kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
+            kernel_session = sync_to_async(self.db.get_kernel_session('kernel_id', kernel_id), thread_sensitive=True)
             if kernel_session:
                 ml_node = kernel_session[0].ml_node
-                mlnode = self.db.get_mlnode_address_with_field('id', ml_node.id)
+                mlnode = sync_to_async(self.db.get_mlnode_address_with_field('id', ml_node.id), thread_sensitive=True)
                 _url = f'{mlnode}/api/kernels'
                 _url = url_path_join(_url, url_escape(str(kernel_id)))
 
@@ -449,7 +450,7 @@ class GatewayKernelManager(MappingKernelManager):
                 'mlnode_id': str(mlnode_id)
             }
 
-            self.db.create_kernel_session(_field_values)
+            sync_to_async(self.db.create_kernel_session(_field_values), thread_sensitive=True)
         else:
             kernel = yield self.get_kernel(kernel_id)
             kernel_id = kernel['id']
@@ -481,7 +482,7 @@ class GatewayKernelManager(MappingKernelManager):
             # after successful response add the updated entries to the db.
             kernel = json_decode(response.body)
             kernel_ip = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', kernel_url).group()
-            mlnode_name = self.db.get_ml_node('ip_address', kernel_ip)[0]
+            mlnode_name = sync_to_async(self.db.get_ml_node('ip_address', kernel_ip)[0], thread_sensitive=True)
 
             _field_values = {
                 'kernel_id': str(kernel['id']),
@@ -489,7 +490,7 @@ class GatewayKernelManager(MappingKernelManager):
                 'kernel_name': str(kernel['name'])
             }
 
-            self.db.create_kernel_session(_field_values)
+            sync_to_async(self.db.create_kernel_session(_field_values), thread_sensitive=True)
 
         self.log.info("Kernel retrieved: %s" % kernel)
         raise gen.Return(kernel)
@@ -518,7 +519,7 @@ class GatewayKernelManager(MappingKernelManager):
         self.log.info(f"Request list kernels from = {self.base_endpoints} ")
 
         # Fetch all the mlnodes address stored in the db.
-        ml_nodes = self.db.get_mlnode_address()
+        ml_nodes = sync_to_async(self.db.get_mlnode_address(), thread_sensitive=True)
 
         for ml_node in ml_nodes:
             base_endpoint = f'{ml_node}/api/kernels'
@@ -663,8 +664,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
         _kernel_specs = []
 
         # Fetching all the kernels from the available MLnodes.
-        ml_nodes = self.db.get_mlnode_address()
-
+        ml_nodes = sync_to_async(self.db.get_mlnode_address(), thread_sensitive=True)
 
         for ml_node in ml_nodes:
             endpoint = f'{ml_node}/api/kernelspecs'
@@ -713,7 +713,7 @@ class GatewayKernelSpecManager(KernelSpecManager):
             __kernel_specs = {'kernelspecs': {}}
             __kernel_specs__ = value_mlnode['kernelspecs']
             for key, value in __kernel_specs__.items():
-                node = self.db.get_ml_node('ip_address', key_mlnode)[0]
+                node = sync_to_async(self.db.get_ml_node('ip_address', key_mlnode)[0], thread_sensitive=True)
                 display_name = node.name
                 _key = key + "~" + str(node.id)
                 __kernel_specs['kernelspecs'][_key] = value
