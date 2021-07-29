@@ -78,7 +78,7 @@ class ExecuteQueries:
         :return: List of Mlnode instances.
         """
 
-        return sync_to_async(self.get_active_devices(), thread_sensitive=True)
+        return self.get_active_devices()
 
     def get_ml_node(self, column_name, column_value):
         """
@@ -88,7 +88,7 @@ class ExecuteQueries:
         :return: List of Mlnode instances.
         """
         kwargs = {column_name: column_value}
-        return sync_to_async(self.get_active_devices(filters=kwargs), thread_sensitive=True)
+        return self.get_active_devices(filters=kwargs)
 
     def delete_kernel_session(self, column_name, column_value):
         """
@@ -160,7 +160,7 @@ class ExecuteQueries:
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
         """
-        mlnodes = sync_to_async(self.get_active_devices(), thread_sensitive=True)
+        mlnodes = self.get_active_devices()
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
     def get_mlnode_address_with_field(self, column_name, column_value):
