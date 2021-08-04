@@ -104,8 +104,7 @@ class ExecuteQueries:
         """
         print("deleting kernel session")
         resp = requests.delete(API_KERNEL, params={"kernel_id": kernel_id})
-        resp_json = resp.json()
-        return resp_json
+        return resp.json()
 
     def get_kernel_session(self, column_name: str, column_value: str) -> dict:
         """
@@ -128,8 +127,8 @@ class ExecuteQueries:
         :return: JSON serialized KernelSession instance.
         """
         print("Creating a KernelSession")
-        _kernel_id = _field_values.get("kernel_id", None)
-        _kernel_name = _field_values.get("kernel_name", None)
+        _kernel_id = _field_values.get("kernel_id")
+        _kernel_name = _field_values.get("kernel_name")
         mlnode_id = _field_values['mlnode_id']
         data={
             "kernel_id": _kernel_id,
