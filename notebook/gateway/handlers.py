@@ -39,9 +39,11 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         Return MlNode url for the class level kernel ID.
         :return: Ipaddress of the URL. ( String )
         """
+        print("mlnode_url")
         kernel_session = self.db.get_kernel_session('kernel_id', self.kernel_id)
-        ml_node = kernel_session[0].ml_node
-        return str(ml_node.ip_address)
+        ml_node_id = kernel_session["ml_node"]
+        ml_node = self.db.get_ml_node('id', ml_node_id)
+        return str(ml_node["ip_address"])
 
 
     def check_origin(self, origin=None):
@@ -90,6 +92,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.db.update_kernel_session(_field_values)
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
+        self.log.info(f"gateway = {self.ml_node_url}")
         self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}')
         yield super().get(kernel_id=kernel_id, *args, **kwargs)
 
@@ -156,11 +159,14 @@ class GatewayWebSocketClient(LoggingConfigurable):
     """Proxy web socket connection to a kernel/enterprise gateway."""
 
     def __init__(self, **kwargs):
+        self.log.info(f"Gate way url is {kwargs['gateway_url']}")
         super().__init__(**kwargs)
+        self.gateway_url = kwargs['gateway_url']
         self.kernel_id = None
         self.ws = None
         self.ws_future = Future()
         self.disconnected = False
+
 
     @gen.coroutine
     def _connect(self, kernel_id):
@@ -168,6 +174,8 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
         self.ws = None
         self.kernel_id = kernel_id
+
+        self.log.info(f'Kernel ID={kernel_id}')
 
         # get the data from the kernel session.
         ws_url = url_path_join(

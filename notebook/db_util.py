@@ -1,6 +1,8 @@
 # Db util class which take care of executing queries.
 
 import os
+import requests
+from requests.auth import HTTPBasicAuth
 
 import django
 from django.conf import settings
@@ -50,122 +52,144 @@ from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
 
+HOST = "localhost"
+PORT = 8000
+
+API = f'http://{HOST}:{PORT}/qnnect/ml_node/'
+API_KERNEL = f'http://{HOST}:{PORT}/qnnect/kernel_session/'
+print("API IS", API)
+
+
 class ExecuteQueries:
     """
     This class contains all the helper methods for executing queries using django orms.
     The logic of  django orm is kept here so that we don't repeat the imports and setup django in different files.
     """
 
-    def get_active_devices(self, edge_devices):
+    def get_active_devices(self, edge_devices: list[dict]) -> list[dict]:
         """
         Get active devices
-        :param edge_devices: edge device query set.
+        :param edge_devices: List of dictionaries (the JSON response from API)
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
+        return [edge_device for edge_device in edge_devices]
 
     def get_mlnodes(self):
         """
         Get all the mlnode instances that are present in the MLNode table.
         :return: List of Mlnode instances.
         """
+        resp = requests.get(API, auth=HTTPBasicAuth(USERNAME, PASSWORD))
+        ml_nodes_json = resp.json()
+        return self.get_active_devices(ml_nodes_json)
 
-        return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True))
-
-    def get_ml_node(self, column_name, column_value):
+    def get_ml_node(self, column_name: str, column_value: str) -> dict:
         """
-        Get ml node instances for the given column name and value.
+        Get the first instance of MLNode which matches the given column name and value.
         :param column_name: (str) Name of the column.
         :param column_value: (str) Value of column.
-        :return: List of Mlnode instances.
+        :return: A single MLNode instance
         """
-        kwargs = {column_name: column_value}
-        return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True).filter(**kwargs))
-
-    def delete_kernel_session(self, column_name, column_value):
+        ml_nodes = self.get_mlnodes()
+        print("get_ml_nodes ====", ml_nodes)
+        return list(filter(lambda ml_node: ml_node[column_name] == column_value, ml_nodes))[0]
+    
+    
+    def delete_kernel_session(self, kernel_id: str) -> dict:
         """
-        Delete the entry in the Kernel Session table for the given column name and Value.
-        :param column_name: (str) Name of the column
-        :param column_value: (str) Value of column
+        Delete the entry in the Kernel Session table for the given `kernel_id`
+        :param kernel_id: (str) UUID of the KernelSession which is to be deleted
         :return: List of KernelSession instances.
         """
-        kwargs = {column_name: column_value}
-        return KernelSession.objects.filter(**kwargs).delete()
+        print("deleting kernel session")
+        resp = requests.delete(API_KERNEL, params={"kernel_id": kernel_id})
+        resp_json = resp.json()
+        return resp_json
 
-    def get_kernel_session(self, column_name, column_value):
+    def get_kernel_session(self, column_name: str, column_value: str) -> dict:
         """
-        Get kernel session instances for the given column name and value.
+        Get the first instance of kernel session which matches the given column name and value.
         :param column_name: (str) Name of the column
         :param column_value: (str) Value of column
-        :return: List of KernelSession instances.
+        :return: A single KernelSession instance
         """
+        print("getting kernel session")
         kwargs = {column_name: column_value}
-        return KernelSession.objects.filter(**kwargs)
+        resp = requests.get(API_KERNEL, params=kwargs, auth=HTTPBasicAuth(USERNAME, PASSWORD))
+        resp_json = resp.json()
+        print(resp_json, "is the response")
+        return resp_json[0]
 
-    def create_kernel_session(self, _field_values):
+    def create_kernel_session(self, _field_values: dict) -> dict:
         """
         Create kernel session instance with provided values.
         :param _field_values: (Dict) Dictionary of field values.
-        :return: KernelSession instance.
+        :return: JSON serialized KernelSession instance.
         """
-
+        print("Creating a KernelSession")
         _kernel_id = _field_values.get("kernel_id", None)
         _kernel_name = _field_values.get("kernel_name", None)
         mlnode_id = _field_values['mlnode_id']
-        result, _ = KernelSession.objects.update_or_create(kernel_id=_kernel_id,
-                                                           kernel_name=_kernel_name,
-                                                           ml_node=EdgeDevice.objects.get(id=mlnode_id))
-        return result
+        data={
+            "kernel_id": _kernel_id,
+            "kernel_name": _kernel_name,
+            "ml_node": int(mlnode_id),
+        }
+        print("data", data)
+        resp = requests.post(API_KERNEL, data=data, auth=HTTPBasicAuth(USERNAME, PASSWORD))
+        resp_json = resp.json()
+        print(resp_json)
+        return resp_json
 
-    def check_kernel_sessions(self, column_name, column_value):
+    def check_kernel_sessions(self, column_name: str, column_value: str) -> bool:
         """
         Check if there is an entry wih the following field and value.
         :param column_name: Name of the Column. ( String )
         :param column_value: Value of the Column. ( String )
         :return: Boolean Value.
         """
+        print("checking if exists kernel session")
 
-        kwargs = {column_name: column_value}
-        return KernelSession.objects.filter(**kwargs).exists()
+        raise NotImplementedError
 
     def update_kernel_session(self, _field_values):
         """
         Update the kernel session values.
         :param _field_values: (Dict) Dictionary of field values.
         """
+        print("updating kernel session")
         try:
-            kernel_session = KernelSession.objects.get(
-                kernel_id=_field_values['kernel_id'])
+            print(42)
+            # kernel_session = KernelSession.objects.get(
+            #     kernel_id=_field_values['kernel_id'])
 
-            if 'user_name' in _field_values.keys():
-                user = EnterpriseUser.objects.get(
-                    username=_field_values['user_name'])
-                kernel_session.enterprise_user = user
+            # if 'user_name' in _field_values.keys():
+            #     user = EnterpriseUser.objects.get(
+            #         username=_field_values['user_name'])
+            #     kernel_session.enterprise_user = user
 
-            kernel_session.save()
+            # kernel_session.save()
 
         except Exception as e:
             print(f'Error occurred in updating kernel session ={e}')
+        # raise NotImplementedError
 
-    def get_mlnode_address(self):
+    def get_mlnode_address(self) -> list[str]:
         """
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
         """
-        mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                    system_status__is_connected=True))
-        return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
+        mlnodes = self.get_mlnodes()
+        return [f"https://{mlnode['ip_address']}" for mlnode in mlnodes]
 
-    def get_mlnode_address_with_field(self, column_name, column_value):
+    def get_mlnode_address_with_field(self, column_name: str, column_value: str) -> str:
         """
         Get ml node instances for the given column name and value. Provided a field value.
         :param column_name: Name of the Column. ( String )
         :param column_value: Value of the Column. ( String )
         :return: Address for Mlnode instances.
         """
-        kwargs = {column_name: column_value}
-        mlnode = EdgeDevice.objects.get(**kwargs)
-        return f'https://{str(mlnode.ip_address)}'
+        print(f"{column_name=} {column_value=}")
+        mlnode = self.get_ml_node(column_name, int(column_value))
+        return f"https://{mlnode['ip_address']}"
