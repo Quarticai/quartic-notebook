@@ -90,7 +90,7 @@ class ExecuteQueries:
         :return: Boolean Value.
         """
         kernel_session = self.get_kernel_session(kernel_id)
-        return 'kernel_id' in kernel_session 
+        return kernel_session is not None
 
     def update_kernel_session(self, _field_values: dict) -> None:
         """
