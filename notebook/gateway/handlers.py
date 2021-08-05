@@ -91,7 +91,6 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         self.db.update_kernel_session(_field_values)
         self.kernel_id = cast_unicode(kernel_id, 'ascii')
         self.ml_node_url = self.mlnode_url()
-        self.log.info(f"gateway = {self.ml_node_url}")
         self.gateway = GatewayWebSocketClient(gateway_url=f'{self.ml_node_url}')
         yield super().get(kernel_id=kernel_id, *args, **kwargs)
 
@@ -158,7 +157,6 @@ class GatewayWebSocketClient(LoggingConfigurable):
     """Proxy web socket connection to a kernel/enterprise gateway."""
 
     def __init__(self, **kwargs):
-        self.log.info(f"Gate way url is {kwargs['gateway_url']}")
         super().__init__(**kwargs)
         self.gateway_url = kwargs['gateway_url']
         self.kernel_id = None

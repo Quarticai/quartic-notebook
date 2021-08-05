@@ -54,6 +54,9 @@ settings.configure(
     ])
 
 django.setup()
+
+from deming.edge.status import ACTIVE
+
 class ExecuteQueries:
     """
     This class contains all the helper methods for executing queries using API calls to ContexAlyze.
@@ -66,7 +69,7 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices]
+        return [edge_device for edge_device in edge_devices if edge_device['status'] == ACTIVE]
 
     def get_mlnodes(self):
         """
