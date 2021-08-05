@@ -9,13 +9,6 @@ import django
 from django.conf import settings
 
 
-# PG values.
-PG_DB_USER = os.environ.get('PG_DB_USER', '')
-PG_DB_NAME = os.environ.get('PG_DB_NAME', '')
-PG_DB_PASS = os.environ.get('PG_DB_PASS', '')
-PG_DB_HOST = os.environ.get('PG_DB_HOST', '')
-PG_DB_PORT = os.environ.get('PG_DB_PORT', '')
-
 # Constants for API calls to ContexAlyze
 USERNAME = os.environ.get('USERNAME')
 PASSWORD = os.environ.get('PASSWORD')
@@ -24,19 +17,8 @@ QNNECT_API_URL = urljoin(HOST, 'qnnect/')
 ML_NODE_API = urljoin(QNNECT_API_URL, 'ml_node/')
 KERNEL_SESSION_API = urljoin(QNNECT_API_URL, 'kernel_session/')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': PG_DB_NAME,
-        'USER': PG_DB_USER,
-        'PASSWORD': PG_DB_PASS,
-        'HOST': PG_DB_HOST,
-        'PORT': PG_DB_PORT,
-    }
-}
 
 settings.configure(
-    DATABASES=DATABASES,
     SECRET_KEY='1234578',
     LANGUAGE_CODE='en-us',
     TIME_ZONE='UTC',
@@ -69,7 +51,7 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices if edge_device['status'] == ACTIVE]
+        return [edge_device for edge_device in edge_devices]
 
     def get_mlnodes(self):
         """
