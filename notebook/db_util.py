@@ -47,7 +47,7 @@ class ExecuteQueries:
         :return: A single JSON serialized MLNode instance
         """
         ml_nodes = self.get_mlnodes()
-        return list(filter(lambda ml_node: ml_node[column_name] == column_value, ml_nodes))[0]
+        return next(filter(lambda ml_node: ml_node[column_name] == column_value, ml_nodes), None)
     
     
     def delete_kernel_session(self, kernel_id: str) -> None:
@@ -64,7 +64,7 @@ class ExecuteQueries:
         :return: A single JSON serialized KernelSession instance
         """
         resp = requests.get(urljoin(KERNEL_SESSION_API, kernel_id), auth=HTTPBasicAuth(USERNAME, PASSWORD))
-        return resp.json()
+        return resp.json() if resp.ok else None
 
     def create_kernel_session(self, _field_values: dict) -> dict:
         """

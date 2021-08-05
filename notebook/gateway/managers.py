@@ -388,11 +388,12 @@ class GatewayKernelManager(MappingKernelManager):
 
         if kernel_id:
             kernel_session = self.db.get_kernel_session(kernel_id)
-            ml_node_id = kernel_session["ml_node"]
-            ml_node = self.db.get_ml_node('id', ml_node_id)
-            mlnode = f"https://{ml_node['ip_address']}"
-            _url = f'{mlnode}/api/kernels'
-            _url = url_path_join(_url, url_escape(str(kernel_id)))
+            if kernel_session:
+                ml_node_id = kernel_session["ml_node"]
+                ml_node = self.db.get_ml_node('id', ml_node_id)
+                mlnode = f"https://{ml_node['ip_address']}"
+                _url = f'{mlnode}/api/kernels'
+                _url = url_path_join(_url, url_escape(str(kernel_id)))
         return _url
 
     @gen.coroutine
