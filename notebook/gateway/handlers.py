@@ -39,8 +39,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
         Return MlNode url for the class level kernel ID.
         :return: Ipaddress of the URL. ( String )
         """
-        print("mlnode_url")
-        kernel_session = self.db.get_kernel_session('kernel_id', self.kernel_id)
+        kernel_session = self.db.get_kernel_session(self.kernel_id)
         ml_node_id = kernel_session["ml_node"]
         ml_node = self.db.get_ml_node('id', ml_node_id)
         return str(ml_node["ip_address"])

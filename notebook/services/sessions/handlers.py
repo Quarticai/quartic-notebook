@@ -57,7 +57,6 @@ class SessionRootHandler(APIHandler):
         kernel = model.get('kernel', {})
         kernel_name = kernel.get('name', None)
         kernel_id = kernel.get('id', None)
-        print("The kernel name is", kernel_name)
         mlnode_id = kernel_name.split('~')[-1]
 
         if not kernel_id and not kernel_name:

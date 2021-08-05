@@ -360,7 +360,7 @@ class GatewayKernelManager(MappingKernelManager):
         :return: Boolean stating if it is present in the system.
         """
 
-        return self.db.check_kernel_sessions('kernel_id', kernel_id)
+        return self.db.check_kernel_sessions(kernel_id)
 
     def remove_kernel(self, kernel_id):
         """
@@ -381,24 +381,18 @@ class GatewayKernelManager(MappingKernelManager):
         mlnode_id: ID of the ml node ( Optional ) ( UID )
 
         """
-        print("getting kernel endpoint url\n\n")
         _url = None
         if not kernel_id:
-            print("no kernel id")
             ml_node = self.db.get_mlnode_address_with_field('id', mlnode_id)
             _url = f'{ml_node}/api/kernels'
 
         if kernel_id:
-            self.log.info("have kernel id")
-            kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
-            self.log.info(f"got kernel session\n\n {kernel_session['id']}")
+            kernel_session = self.db.get_kernel_session(kernel_id)
             ml_node_id = kernel_session["ml_node"]
             ml_node = self.db.get_ml_node('id', ml_node_id)
-            self.log.info(f"ml node here is\n\n {ml_node_id}")
             mlnode = f"https://{ml_node['ip_address']}"
             _url = f'{mlnode}/api/kernels'
             _url = url_path_join(_url, url_escape(str(kernel_id)))
-        print(_url, 'is the url!!!!\n\n')
         return _url
 
     @gen.coroutine
@@ -471,10 +465,8 @@ class GatewayKernelManager(MappingKernelManager):
         kernel_id : uuid
             The uuid of the kernel.
         """
-        print("getting the kernel")
         # Get the url from the kernel ID in Kernel Session Table.
         kernel_url = self._get_kernel_endpoint_url(kernel_id)
-        print("got the kernel url", kernel_url)
         try:
             response = yield gateway_request(kernel_url, method='GET')
         except web.HTTPError as error:
