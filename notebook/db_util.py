@@ -87,8 +87,7 @@ class ExecuteQueries:
         :return: A single JSON serialized KernelSession instance
         """
         resp = requests.get(urljoin(KERNEL_SESSION_API, kernel_id), auth=HTTPBasicAuth(USERNAME, PASSWORD))
-        resp_json = resp.json()
-        return resp_json
+        return resp.json()
 
     def create_kernel_session(self, _field_values: dict) -> dict:
         """
@@ -96,8 +95,8 @@ class ExecuteQueries:
         :param _field_values: (Dict) Dictionary of field values.
         :return: JSON serialized KernelSession instance.
         """
-        _kernel_id = _field_values.get("kernel_id", None)
-        _kernel_name = _field_values.get("kernel_name", None)
+        _kernel_id = _field_values.get("kernel_id")
+        _kernel_name = _field_values.get("kernel_name")
         mlnode_id = _field_values['mlnode_id']
         data={
             "kernel_id": _kernel_id,
@@ -105,8 +104,7 @@ class ExecuteQueries:
             "ml_node": int(mlnode_id),
         }
         resp = requests.post(KERNEL_SESSION_API, data=data, auth=HTTPBasicAuth(USERNAME, PASSWORD))
-        resp_json = resp.json()
-        return resp_json
+        return resp.json()
 
     def check_kernel_sessions(self, kernel_id: str) -> bool:
         """
@@ -122,7 +120,7 @@ class ExecuteQueries:
         Update the kernel session values.
         :param _field_values: (Dict) Dictionary of field values.
         """
-        if 'user_name' in _field_values.keys():
+        if 'user_name' in _field_values:
             resp = requests.patch(urljoin(KERNEL_SESSION_API, 'update_kernel/'), data={
                 'kernel_id': _field_values['kernel_id'],
                 'enterprise_user_name': _field_values['user_name']
