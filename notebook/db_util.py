@@ -1,12 +1,15 @@
 # Db util class which take care of executing queries.
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import django
 from django.conf import settings
 
 
 from deming import deming_setup
+from django.core import serializers
+
 
 # PG values.
 PG_DB_USER = os.environ.get('PG_DB_USER', '')
@@ -50,12 +53,20 @@ from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
 
+def run_inside_thread(query_func):
+    def wrapped_function(self, *args, **kwargs):
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            submission = pool.submit(query_func, self, *args, **kwargs)
+            return submission.result()
+    return wrapped_function
+
 class ExecuteQueries:
     """
     This class contains all the helper methods for executing queries using django orms.
     The logic of  django orm is kept here so that we don't repeat the imports and setup django in different files.
     """
 
+    @run_inside_thread
     def get_active_devices(self, edge_devices):
         """
         Get active devices
@@ -63,8 +74,9 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
+        return [edge_device for edge_device in edge_devices if edge_device.status != ACTIVE]
 
+    @run_inside_thread
     def get_mlnodes(self):
         """
         Get all the mlnode instances that are present in the MLNode table.
@@ -72,8 +84,9 @@ class ExecuteQueries:
         """
 
         return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True))
+                                                                 ))
 
+    @run_inside_thread
     def get_ml_node(self, column_name, column_value):
         """
         Get ml node instances for the given column name and value.
@@ -83,8 +96,8 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 system_status__is_connected=True).filter(**kwargs))
-
+                                                                 ).filter(**kwargs))
+    @run_inside_thread
     def delete_kernel_session(self, column_name, column_value):
         """
         Delete the entry in the Kernel Session table for the given column name and Value.
@@ -95,6 +108,7 @@ class ExecuteQueries:
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).delete()
 
+    @run_inside_thread
     def get_kernel_session(self, column_name, column_value):
         """
         Get kernel session instances for the given column name and value.
@@ -105,6 +119,7 @@ class ExecuteQueries:
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs)
 
+    @run_inside_thread
     def create_kernel_session(self, _field_values):
         """
         Create kernel session instance with provided values.
@@ -120,6 +135,7 @@ class ExecuteQueries:
                                                            ml_node=EdgeDevice.objects.get(id=mlnode_id))
         return result
 
+    @run_inside_thread
     def check_kernel_sessions(self, column_name, column_value):
         """
         Check if there is an entry wih the following field and value.
@@ -131,6 +147,7 @@ class ExecuteQueries:
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).exists()
 
+    @run_inside_thread
     def update_kernel_session(self, _field_values):
         """
         Update the kernel session values.
@@ -150,15 +167,17 @@ class ExecuteQueries:
         except Exception as e:
             print(f'Error occurred in updating kernel session ={e}')
 
+    @run_inside_thread
     def get_mlnode_address(self):
         """
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
         """
         mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                    system_status__is_connected=True))
+                                                                    ))
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
+    @run_inside_thread
     def get_mlnode_address_with_field(self, column_name, column_value):
         """
         Get ml node instances for the given column name and value. Provided a field value.

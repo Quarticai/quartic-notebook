@@ -17,7 +17,7 @@ from ..utils import url_path_join
 
 from traitlets import Instance, Unicode, Float, Bool, default, validate, TraitError
 from traitlets.config import SingletonConfigurable
-from ..db_util import ExecuteQueries
+from ..db_util import ExecuteQueries, run_inside_thread
 import re
 
 
@@ -368,6 +368,15 @@ class GatewayKernelManager(MappingKernelManager):
         """
         self.db.delete_kernel_session('kernel_id', kernel_id)
 
+    @run_inside_thread
+    def get_url_from_ml_node(self, kernel_session):
+        if kernel_session:
+            ml_node = kernel_session[0].ml_node
+            mlnode = self.db.get_mlnode_address_with_field('id', ml_node.id)
+            _url = f'{mlnode}/api/kernels'
+            _url = url_path_join(_url, url_escape(str(kernel_session[0].kernel_id)))
+            return _url
+        
     def _get_kernel_endpoint_url(self, kernel_id=None,
                                  kernel_name=None,
                                  mlnode_id=None):
@@ -389,11 +398,7 @@ class GatewayKernelManager(MappingKernelManager):
 
         if kernel_id:
             kernel_session = self.db.get_kernel_session('kernel_id', kernel_id)
-            if kernel_session:
-                ml_node = kernel_session[0].ml_node
-                mlnode = self.db.get_mlnode_address_with_field('id', ml_node.id)
-                _url = f'{mlnode}/api/kernels'
-                _url = url_path_join(_url, url_escape(str(kernel_id)))
+            _url = self.get_url_from_ml_node(kernel_session)
 
         return _url
 
