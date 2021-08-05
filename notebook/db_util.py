@@ -51,7 +51,7 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices]
+        return [edge_device for edge_device in edge_devices if edge_device['status'] == ACTIVE]
 
     def get_mlnodes(self):
         """
