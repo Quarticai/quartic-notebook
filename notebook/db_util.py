@@ -4,9 +4,7 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urljoin
-
-import django
-from django.conf import settings
+from deming.edge.status import ACTIVE
 
 
 # Constants for API calls to ContexAlyze
@@ -17,27 +15,6 @@ QNNECT_API_URL = urljoin(HOST, 'qnnect/')
 ML_NODE_API = urljoin(QNNECT_API_URL, 'ml_node/')
 KERNEL_SESSION_API = urljoin(QNNECT_API_URL, 'kernel_session/')
 
-
-settings.configure(
-    SECRET_KEY='1234578',
-    LANGUAGE_CODE='en-us',
-    TIME_ZONE='UTC',
-    USE_I18N=True,
-    USE_L10N=True,
-    USE_TZ=True,
-    INSTALLED_APPS=[
-        'deming_core',
-        'django.contrib.auth',
-        'django.contrib.admin',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-    ])
-
-django.setup()
-
-from deming.edge.status import ACTIVE
 
 class ExecuteQueries:
     """
