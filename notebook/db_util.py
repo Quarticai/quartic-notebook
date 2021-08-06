@@ -5,6 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import django
 from django.conf import settings
+from django.db import connection
+from functools import wraps
 
 # PG values.
 PG_DB_USER = os.environ.get('PG_DB_USER', '')
@@ -49,6 +51,38 @@ from deming.edge import device_types
 from deming.edge.status import ACTIVE
 
 
+
+class DjangoConnectionThreadPoolExecutor(ThreadPoolExecutor):
+    """
+    https://stackoverflow.com/questions/57211476/django-orm-leaks-connections-when-using-threadpoolexecutor
+    
+    As we are running database queries inside a thread, some of the connections do not close.
+    Use this instead of ThreadPoolExecutor to properly close the connections.
+    """
+    def close_django_db_connection(self):
+        connection.close()
+
+    def generate_thread_closing_wrapper(self, fn):
+        @wraps(fn)
+        def new_func(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            finally:
+                self.close_django_db_connection()
+        return new_func
+
+    def submit(*args, **kwargs):
+        if len(args) >= 2:
+            self, fn, *args = args
+            fn = self.generate_thread_closing_wrapper(fn=fn)
+        elif not args:
+            raise TypeError("descriptor 'submit' of 'ThreadPoolExecutor' object needs an argument")
+        elif 'fn' in kwargs:
+            fn = self.generate_thread_closing_wrapper(fn=kwargs.pop('fn'))
+            self, *args = args
+    
+        return super(self.__class__, self).submit(fn, *args, **kwargs)
+
 def run_inside_thread(query_func):
     """
     Decorator to use with methods which access the Django ORM.
@@ -56,7 +90,7 @@ def run_inside_thread(query_func):
     So, run it in a separate thread.
     """
     def wrapped_function(self, *args, **kwargs):
-        with ThreadPoolExecutor(max_workers=1) as pool:
+        with DjangoConnectionThreadPoolExecutor(max_workers=1) as pool:
             submission = pool.submit(query_func, self, *args, **kwargs)
             return submission.result()
     return wrapped_function
