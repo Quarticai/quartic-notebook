@@ -165,8 +165,8 @@ class ExecuteQueries:
         :return: KernelSession instance.
         """
 
-        _kernel_id = _field_values.get("kernel_id", None)
-        _kernel_name = _field_values.get("kernel_name", None)
+        _kernel_id = _field_values.get("kernel_id")
+        _kernel_name = _field_values.get("kernel_name")
         mlnode_id = _field_values['mlnode_id']
         result, _ = KernelSession.objects.update_or_create(kernel_id=_kernel_id,
                                                            kernel_name=_kernel_name,
@@ -195,7 +195,7 @@ class ExecuteQueries:
             kernel_session = KernelSession.objects.get(
                 kernel_id=_field_values['kernel_id'])
 
-            if 'user_name' in _field_values.keys():
+            if 'user_name' in _field_values:
                 user = EnterpriseUser.objects.get(
                     username=_field_values['user_name'])
                 kernel_session.enterprise_user = user
