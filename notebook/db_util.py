@@ -52,7 +52,7 @@ from deming.edge.status import ACTIVE
 def run_inside_thread(query_func):
     """
     Decorator to use with methods which access the Django ORM.
-    We are in an asychronous context and cannot call Django ORM which is synchronous.
+    We are in an asynchronous context and cannot call Django ORM which is synchronous.
     So, run it in a separate thread.
     """
     def wrapped_function(self, *args, **kwargs):
@@ -76,7 +76,7 @@ class ExecuteQueries:
         :return: list of active edge devices.
         """
 
-        return [edge_device for edge_device in edge_devices if edge_device.status != ACTIVE]
+        return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
 
     @run_inside_thread
     def get_mlnodes(self):
@@ -86,7 +86,7 @@ class ExecuteQueries:
         """
 
         return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 ))
+                                                                 system_status__is_connected=True))
 
     @run_inside_thread
     def get_ml_node(self, column_name, column_value):
@@ -98,7 +98,8 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         return self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                 ).filter(**kwargs))
+                                                                 system_status__is_connected=True).filter(**kwargs))
+    
     @run_inside_thread
     def delete_kernel_session(self, column_name, column_value):
         """
@@ -176,7 +177,7 @@ class ExecuteQueries:
         :return: List of address for Mlnodes instances.
         """
         mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
-                                                                    ))
+                                                                    system_status__is_connected=True))
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
     @run_inside_thread
