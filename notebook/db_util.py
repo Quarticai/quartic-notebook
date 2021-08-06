@@ -53,12 +53,19 @@ from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
 
+
 def run_inside_thread(query_func):
+    """
+    Decorator to use with methods which access the Django ORM.
+    We are in an asychronous context and cannot call Django ORM which is synchronous.
+    So, run it in a separate thread.
+    """
     def wrapped_function(self, *args, **kwargs):
         with ThreadPoolExecutor(max_workers=1) as pool:
             submission = pool.submit(query_func, self, *args, **kwargs)
             return submission.result()
     return wrapped_function
+
 
 class ExecuteQueries:
     """
