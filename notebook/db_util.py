@@ -6,7 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 import django
 from django.conf import settings
 from django.db import connection
+from django.db.models import QuerySet
 from functools import wraps
+from typing import List
 
 # PG values.
 PG_DB_USER = os.environ.get('PG_DB_USER', '')
@@ -49,7 +51,6 @@ django.setup()
 from deming.models import EnterpriseUser, KernelSession, EdgeDevice
 from deming.edge import device_types
 from deming.edge.status import ACTIVE
-
 
 
 class DjangoConnectionThreadPoolExecutor(ThreadPoolExecutor):
@@ -103,7 +104,7 @@ class ExecuteQueries:
     """
 
     @run_inside_thread
-    def get_active_devices(self, edge_devices):
+    def get_active_devices(self, edge_devices: QuerySet) -> List[EdgeDevice]:
         """
         Get active devices
         :param edge_devices: edge device query set.
@@ -113,7 +114,7 @@ class ExecuteQueries:
         return [edge_device for edge_device in edge_devices if edge_device.status == ACTIVE]
 
     @run_inside_thread
-    def get_mlnodes(self):
+    def get_mlnodes(self) -> QuerySet:
         """
         Get all the mlnode instances that are present in the MLNode table.
         :return: List of Mlnode instances.
@@ -123,7 +124,7 @@ class ExecuteQueries:
                                                                  system_status__is_connected=True))
 
     @run_inside_thread
-    def get_ml_node(self, column_name, column_value):
+    def get_ml_node(self, column_name: str, column_value: str) -> List[EdgeDevice]:
         """
         Get ml node instances for the given column name and value.
         :param column_name: (str) Name of the column.
@@ -135,29 +136,29 @@ class ExecuteQueries:
                                                                  system_status__is_connected=True).filter(**kwargs))
     
     @run_inside_thread
-    def delete_kernel_session(self, column_name, column_value):
+    def delete_kernel_session(self, column_name: str, column_value: str) -> tuple:
         """
         Delete the entry in the Kernel Session table for the given column name and Value.
         :param column_name: (str) Name of the column
         :param column_value: (str) Value of column
-        :return: List of KernelSession instances.
+        :return: Tuple with information about number of deleted sessions.
         """
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs).delete()
 
     @run_inside_thread
-    def get_kernel_session(self, column_name, column_value):
+    def get_kernel_session(self, column_name: str, column_value: str) -> QuerySet:
         """
         Get kernel session instances for the given column name and value.
         :param column_name: (str) Name of the column
         :param column_value: (str) Value of column
-        :return: List of KernelSession instances.
+        :return: QuerySet of KernelSession instances.
         """
         kwargs = {column_name: column_value}
         return KernelSession.objects.filter(**kwargs)
 
     @run_inside_thread
-    def create_kernel_session(self, _field_values):
+    def create_kernel_session(self, _field_values: dict) -> KernelSession:
         """
         Create kernel session instance with provided values.
         :param _field_values: (Dict) Dictionary of field values.
@@ -173,7 +174,7 @@ class ExecuteQueries:
         return result
 
     @run_inside_thread
-    def check_kernel_sessions(self, column_name, column_value):
+    def check_kernel_sessions(self, column_name: str, column_value: str) -> bool:
         """
         Check if there is an entry wih the following field and value.
         :param column_name: Name of the Column. ( String )
@@ -185,7 +186,7 @@ class ExecuteQueries:
         return KernelSession.objects.filter(**kwargs).exists()
 
     @run_inside_thread
-    def update_kernel_session(self, _field_values):
+    def update_kernel_session(self, _field_values: dict) -> None:
         """
         Update the kernel session values.
         :param _field_values: (Dict) Dictionary of field values.
@@ -205,7 +206,7 @@ class ExecuteQueries:
             print(f'Error occurred in updating kernel session ={e}')
 
     @run_inside_thread
-    def get_mlnode_address(self):
+    def get_mlnode_address(self) -> List[str]:
         """
         Get address for all the mlnodes
         :return: List of address for Mlnodes instances.
@@ -215,7 +216,7 @@ class ExecuteQueries:
         return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
 
     @run_inside_thread
-    def get_mlnode_address_with_field(self, column_name, column_value):
+    def get_mlnode_address_with_field(self, column_name: str, column_value: str) -> str:
         """
         Get ml node instances for the given column name and value. Provided a field value.
         :param column_name: Name of the Column. ( String )
