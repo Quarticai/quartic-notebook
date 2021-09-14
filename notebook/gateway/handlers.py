@@ -20,6 +20,7 @@ from jupyter_client.session import Session
 from traitlets.config.configurable import LoggingConfigurable
 from .managers import GatewayClient
 from ..db_util import ExecuteQueries
+from notebook.db_util import run_inside_thread
 
 # Keepalive ping interval (default: 30 seconds)
 GATEWAY_WS_PING_INTERVAL_SECS = int(os.getenv('GATEWAY_WS_PING_INTERVAL_SECS', 30))
@@ -34,6 +35,7 @@ class WebSocketChannelsHandler(WebSocketHandler, IPythonHandler):
     ml_node_url = None
     db = ExecuteQueries()
 
+    @run_inside_thread
     def mlnode_url(self):
         """
         Return MlNode url for the class level kernel ID.
@@ -157,6 +159,7 @@ class GatewayWebSocketClient(LoggingConfigurable):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.gateway_url = kwargs['gateway_url']
         self.kernel_id = None
         self.ws = None
         self.ws_future = Future()
