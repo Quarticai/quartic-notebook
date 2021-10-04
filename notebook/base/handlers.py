@@ -74,8 +74,7 @@ class AuthenticatedHandler(web.RequestHandler):
         ])
 
     def set_default_headers(self):
-        headers = {}
-        headers["X-Content-Type-Options"] = "nosniff"
+        headers = {'X-Content-Type-Options': 'nosniff'}
         headers.update(self.settings.get('headers', {}))
 
         headers["Content-Security-Policy"] = self.content_security_policy
@@ -162,7 +161,7 @@ class AuthenticatedHandler(web.RequestHandler):
     def logged_in(self):
         """Is a user currently logged in?"""
         user = self.get_current_user()
-        return (user and not user == 'anonymous')
+        return user and user != 'anonymous'
 
     @property
     def login_handler(self):
@@ -337,15 +336,11 @@ class IPythonHandler(AuthenticatedHandler):
         )
 
     def get_origin(self):
-        # Handle WebSocket Origin naming convention differences
-        # The difference between version 8 and 13 is that in 8 the
-        # client sends a "Sec-Websocket-Origin" header and in 13 it's
-        # simply "Origin".
-        if "Origin" in self.request.headers:
-            origin = self.request.headers.get("Origin")
-        else:
-            origin = self.request.headers.get("Sec-Websocket-Origin", None)
-        return origin
+        return (
+            self.request.headers.get("Origin")
+            if "Origin" in self.request.headers
+            else self.request.headers.get("Sec-Websocket-Origin", None)
+        )
 
     # origin_to_satisfy_tornado is present because tornado requires
     # check_origin to take an origin argument, but we don't use it
@@ -445,17 +440,17 @@ class IPythonHandler(AuthenticatedHandler):
         try:
             return super().check_xsrf_cookie()
         except web.HTTPError as e:
-            if self.request.method in {'GET', 'HEAD'}:
-                # Consider Referer a sufficient cross-origin check for GET requests
-                if not self.check_referer():
-                    referer = self.request.headers.get('Referer')
-                    if referer:
-                        msg = "Blocking Cross Origin request from {}.".format(referer)
-                    else:
-                        msg = "Blocking request from unknown origin"
-                    raise web.HTTPError(403, msg) from e
-            else:
+            if self.request.method not in {'GET', 'HEAD'}:
                 raise
+
+            # Consider Referer a sufficient cross-origin check for GET requests
+            if not self.check_referer():
+                referer = self.request.headers.get('Referer')
+                if referer:
+                    msg = "Blocking Cross Origin request from {}.".format(referer)
+                else:
+                    msg = "Blocking request from unknown origin"
+                raise web.HTTPError(403, msg) from e
 
     def check_host(self):
         """Check the host header if remote access disallowed.
@@ -632,11 +627,10 @@ class APIHandler(IPythonHandler):
 
     @property
     def content_security_policy(self):
-        csp = '; '.join([
+        return '; '.join([
                 super().content_security_policy,
                 "default-src 'none'",
             ])
-        return csp
 
     # set _track_activity = False on API handlers that shouldn't track activity
     _track_activity = True
@@ -726,12 +720,11 @@ class AuthenticatedFileHandler(IPythonHandler, web.StaticFileHandler):
             name = path
         if name.endswith('.ipynb'):
             return 'application/x-ipynb+json'
+        cur_mime = mimetypes.guess_type(name)[0]
+        if cur_mime == 'text/plain':
+            return 'text/plain; charset=UTF-8'
         else:
-            cur_mime = mimetypes.guess_type(name)[0]
-            if cur_mime == 'text/plain':
-                return 'text/plain; charset=UTF-8'
-            else:
-                return super().get_content_type()
+            return super().get_content_type()
 
     def set_headers(self):
         super().set_headers()

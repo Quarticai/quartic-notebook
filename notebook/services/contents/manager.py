@@ -334,14 +334,11 @@ class ContentsManager(LoggingConfigurable):
         basename, dot, ext = filename.rpartition('.')
         if ext != 'ipynb':
                 basename, dot, ext = filename.partition('.')
-                
+
         suffix = dot + ext
 
         for i in itertools.count():
-            if i:
-                insert_i = '{}{}'.format(insert, i)
-            else:
-                insert_i = ''
+            insert_i = '{}{}'.format(insert, i) if i else ''
             name = u'{basename}{insert}{suffix}'.format(basename=basename,
                 insert=insert_i, suffix=suffix)
             if not self.exists(u'{}/{}'.format(path, name)):

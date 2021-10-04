@@ -156,7 +156,7 @@ def random_ports(port, n):
     """
     for i in range(min(5, n)):
         yield port + i
-    for i in range(n-5):
+    for _ in range(n-5):
         yield max(1, port + random.randint(-2*n, 2*n))
 
 def load_handlers(name):
@@ -203,7 +203,7 @@ class NotebookWebApplication(web.Application):
         template_path = [os.path.expanduser(path) for path in _template_path]
 
         jenv_opt = {"autoescape": True}
-        jenv_opt.update(jinja_env_options if jinja_env_options else {})
+        jenv_opt.update(jinja_env_options or {})
 
         env = Environment(loader=FileSystemLoader(template_path), extensions=['jinja2.ext.i18n'], **jenv_opt)
         sys_info = get_sys_info()
@@ -1459,10 +1459,7 @@ class NotebookApp(JupyterApp):
     @observe('pylab')
     def _update_pylab(self, change):
         """when --pylab is specified, display a warning and exit"""
-        if change['new'] != 'warn':
-            backend = ' %s' % change['new']
-        else:
-            backend = ''
+        backend = ' %s' % change['new'] if change['new'] != 'warn' else ''
         self.log.error(_("Support for specifying --pylab on the command line has been removed."))
         self.log.error(
             _("Please use `%pylab{0}` or `%matplotlib{0}` in the notebook itself.").format(backend)
@@ -1832,10 +1829,7 @@ class NotebookApp(JupyterApp):
         elif self.sock:
             url = self._unix_sock_url()
         else:
-            if self.ip in ('', '0.0.0.0'):
-                ip = "%s" % socket.gethostname()
-            else:
-                ip = self.ip
+            ip = "%s" % socket.gethostname() if self.ip in ('', '0.0.0.0') else self.ip
             url = self._tcp_url(ip)
         if self.token and not self.sock:
             url = self._concat_token(url)
@@ -1847,9 +1841,8 @@ class NotebookApp(JupyterApp):
     def connection_url(self):
         if self.sock:
             return self._unix_sock_url()
-        else:
-            ip = self.ip if self.ip else 'localhost'
-            return self._tcp_url(ip)
+        ip = self.ip or 'localhost'
+        return self._tcp_url(ip)
 
     def _unix_sock_url(self, token=None):
         return '%s%s' % (urlencode_unix_socket(self.sock), self.base_url)
@@ -2134,17 +2127,18 @@ class NotebookApp(JupyterApp):
 
     def server_info(self):
         """Return a JSONable dict of information about this server."""
-        return {'url': self.connection_url,
-                'hostname': self.ip if self.ip else 'localhost',
-                'port': self.port,
-                'sock': self.sock,
-                'secure': bool(self.certfile),
-                'base_url': self.base_url,
-                'token': self.token,
-                'notebook_dir': os.path.abspath(self.notebook_dir),
-                'password': bool(self.password),
-                'pid': os.getpid(),
-               }
+        return {
+            'url': self.connection_url,
+            'hostname': self.ip or 'localhost',
+            'port': self.port,
+            'sock': self.sock,
+            'secure': bool(self.certfile),
+            'base_url': self.base_url,
+            'token': self.token,
+            'notebook_dir': os.path.abspath(self.notebook_dir),
+            'password': bool(self.password),
+            'pid': os.getpid(),
+        }
 
     def write_server_info_file(self):
         """Write the result of server_info() to the JSON file info_file."""
@@ -2271,8 +2265,6 @@ class NotebookApp(JupyterApp):
             self.launch_browser()
 
         if self.token and self._token_generated:
-            # log full URL with generated token, so there's a copy/pasteable link
-            # with auth info.
             if self.sock:
                 self.log.critical('\n'.join([
                     '\n',
@@ -2284,23 +2276,22 @@ class NotebookApp(JupyterApp):
                         'open e.g. %s in a browser.'
                     ) % (self.sock, self._concat_token(self._tcp_url('localhost', 8888)))
                 ]))
+            elif not self.custom_display_url:
+                self.log.critical('\n'.join([
+                    '\n',
+                    'To access the notebook, open this file in a browser:',
+                    '    %s' % urljoin('file:', pathname2url(self.browser_open_file)),
+                    'Or copy and paste one of these URLs:',
+                    '    %s' % self.display_url,
+                ]))
             else:
-                if not self.custom_display_url:
-                    self.log.critical('\n'.join([
-                        '\n',
-                        'To access the notebook, open this file in a browser:',
-                        '    %s' % urljoin('file:', pathname2url(self.browser_open_file)),
-                        'Or copy and paste one of these URLs:',
-                        '    %s' % self.display_url,
-                    ]))
-                else:
-                    self.log.critical('\n'.join([
-                        '\n',
-                        'To access the notebook, open this file in a browser:',
-                        '    %s' % urljoin('file:', pathname2url(self.browser_open_file)),
-                        'Or copy and paste this URL:',
-                        '    %s' % self.display_url,
-                    ]))
+                self.log.critical('\n'.join([
+                    '\n',
+                    'To access the notebook, open this file in a browser:',
+                    '    %s' % urljoin('file:', pathname2url(self.browser_open_file)),
+                    'Or copy and paste this URL:',
+                    '    %s' % self.display_url,
+                ]))
 
         self.io_loop = ioloop.IOLoop.current()
         if sys.platform.startswith('win'):
