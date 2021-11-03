@@ -9,6 +9,7 @@ containerNodes = [
       steps: [
         publish: [
           file_name: 'publish.sh',
+          final_script: 'remove_node_modules.sh',
             ]
         ]
     ]
