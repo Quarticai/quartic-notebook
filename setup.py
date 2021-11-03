@@ -50,7 +50,6 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 from setuptools import setup
 
 from setupbase import (
-    version,
     find_packages,
     find_package_data,
     check_package_data_first,
@@ -74,7 +73,6 @@ languages, sharing, and interactive widgets.
 Read `the documentation <https://jupyter-notebook.readthedocs.io>`_
 for more information.
     """,
-    version         = version,
     packages        = find_packages(),
     package_data    = find_package_data(),
     author          = 'Quartic Development Team',
