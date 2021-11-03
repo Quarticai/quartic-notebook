@@ -69,9 +69,7 @@ def deserialize_binary_message(bmsg):
     nbufs = struct.unpack('!i', bmsg[:4])[0]
     offsets = list(struct.unpack('!' + 'I' * nbufs, bmsg[4:4*(nbufs+1)]))
     offsets.append(None)
-    bufs = []
-    for start, stop in zip(offsets[:-1], offsets[1:]):
-        bufs.append(bmsg[start:stop])
+    bufs = [bmsg[start:stop] for start, stop in zip(offsets[:-1], offsets[1:])]
     msg = json.loads(bufs[0].decode('utf8'))
     msg['header'] = extract_dates(msg['header'])
     msg['parent_header'] = extract_dates(msg['parent_header'])
@@ -227,11 +225,9 @@ class ZMQStreamHandler(WebSocketMixin, WebSocketHandler):
         if channel:
             msg['channel'] = channel
         if msg['buffers']:
-            buf = serialize_binary_message(msg)
-            return buf
-        else:
-            smsg = json.dumps(msg, default=date_default)
-            return cast_unicode(smsg)
+            return serialize_binary_message(msg)
+        smsg = json.dumps(msg, default=date_default)
+        return cast_unicode(smsg)
 
     def _on_zmq_reply(self, stream, msg_list):
         # Sometimes this gets triggered when the on_close method is scheduled in the

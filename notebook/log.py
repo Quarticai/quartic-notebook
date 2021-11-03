@@ -20,16 +20,14 @@ def log_request(handler, log=access_log, log_json=False):
     """
     status = handler.get_status()
     request = handler.request
-    if status < 300 or status == 304:
+    if status < 300 or status == 304 or status < 400:
         # Successes (or 304 FOUND) are info-level
-        log_method = log.info
-    elif status < 400:
         log_method = log.info
     elif status < 500:
         log_method = log.warning
     else:
         log_method = log.error
-    
+
     request_time = 1000.0 * request.request_time()
     ns = dict(
         status=status,
@@ -42,7 +40,7 @@ def log_request(handler, log=access_log, log_json=False):
     if status >= 400:
         # log bad referers
         ns['referer'] = request.headers.get('Referer', 'None')
-        msg = msg + ' referer={referer}'
+        msg += ' referer={referer}'
     if status >= 500 and status != 502:
         # log all headers if it caused an error
         if log_json:

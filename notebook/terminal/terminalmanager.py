@@ -67,8 +67,7 @@ class TerminalManager(LoggingConfigurable, NamedTermManager):
 
     def get(self, name):
         """Get terminal 'name'."""
-        model = self.get_terminal_model(name)
-        return model
+        return self.get_terminal_model(name)
 
     def list(self):
         """Get a list of all running terminals."""
@@ -101,11 +100,10 @@ class TerminalManager(LoggingConfigurable, NamedTermManager):
         """
         self._check_terminal(name)
         term = self.terminals[name]
-        model = {
+        return {
             "name": name,
             "last_activity": isoformat(term.last_activity),
         }
-        return model
 
     def _check_terminal(self, name):
         """Check a that terminal 'name' exists and raise 404 if not."""
@@ -116,18 +114,21 @@ class TerminalManager(LoggingConfigurable, NamedTermManager):
         """Start culler if 'cull_inactive_timeout' is greater than zero.
         Regardless of that value, set flag that we've been here.
         """
-        if not self._initialized_culler and self.cull_inactive_timeout > 0:
-            if self._culler_callback is None:
-                loop = IOLoop.current()
-                if self.cull_interval <= 0:  # handle case where user set invalid value
-                    self.log.warning("Invalid value for 'cull_interval' detected (%s) - using default value (%s).",
-                                     self.cull_interval, self.cull_interval_default)
-                    self.cull_interval = self.cull_interval_default
-                self._culler_callback = PeriodicCallback(
-                    self._cull_terminals, 1000 * self.cull_interval)
-                self.log.info("Culling terminals with inactivity > %s seconds at %s second intervals ...",
-                              self.cull_inactive_timeout, self.cull_interval)
-                self._culler_callback.start()
+        if (
+            not self._initialized_culler
+            and self.cull_inactive_timeout > 0
+            and self._culler_callback is None
+        ):
+            loop = IOLoop.current()
+            if self.cull_interval <= 0:  # handle case where user set invalid value
+                self.log.warning("Invalid value for 'cull_interval' detected (%s) - using default value (%s).",
+                                 self.cull_interval, self.cull_interval_default)
+                self.cull_interval = self.cull_interval_default
+            self._culler_callback = PeriodicCallback(
+                self._cull_terminals, 1000 * self.cull_interval)
+            self.log.info("Culling terminals with inactivity > %s seconds at %s second intervals ...",
+                          self.cull_inactive_timeout, self.cull_interval)
+            self._culler_callback.start()
 
         self._initialized_culler = True
 
