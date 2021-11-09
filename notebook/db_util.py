@@ -216,7 +216,7 @@ class ExecuteQueries:
         """
         mlnodes = self.get_active_devices(EdgeDevice.objects.filter(device_type__in=device_types.valid_ml_node_types,
                                                                     system_status__is_connected=True))
-        return [f'https://{str(mlnode.ip_address)}' for mlnode in mlnodes]
+        return [f'https://{mlnode.ip_address}' for mlnode in mlnodes]
 
     @run_inside_thread
     def get_mlnode_address_with_field(self, column_name: str, column_value: str) -> str:
@@ -228,4 +228,4 @@ class ExecuteQueries:
         """
         kwargs = {column_name: column_value}
         mlnode = EdgeDevice.objects.get(**kwargs)
-        return f'https://{str(mlnode.ip_address)}'
+        return f'https://{mlnode.ip_address}'
