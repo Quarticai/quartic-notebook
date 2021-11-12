@@ -8,5 +8,4 @@ echo $PWD
 set -ex
 echo "$BRANCH_NAME"
 
-
-pip install pip==20.2.3
+pip install Babel==2.9.1
