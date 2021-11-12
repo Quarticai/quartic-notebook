@@ -146,18 +146,17 @@ class bdist_egg_disabled(bdist_egg):
         sys.exit("Aborting implicit building of eggs. Use `pip install .` to install from source.")
 
 setup_args['cmdclass'] = {
-    'build_py': css_js_prerelease(
-            check_package_data_first(build_py)),
-    'sdist' : css_js_prerelease(sdist, strict=True),
+    'build_py': css_js_prerelease(check_package_data_first(build_py)),
+    'sdist': css_js_prerelease(sdist, strict=True),
     'develop': css_js_prerelease(develop),
-    'css' : CompileCSS,
+    'css': CompileCSS,
     'backendtranslations': CompileBackendTranslation,
-    'js' : CompileJS,
-    'jsdeps' : Bower,
+    'js': CompileJS,
+    'jsdeps': Bower,
     'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
+    'jsversion': JavascriptVersion,
 }
 
-setup_args['cmdclass']['jsversion'] = JavascriptVersion
 
 try:
     from wheel.bdist_wheel import bdist_wheel
