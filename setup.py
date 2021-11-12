@@ -16,13 +16,14 @@ import sys
 
 name = "quartic_notebook"
 
-if sys.version_info < (3, 5):
+v = sys.version_info
+if v[:2] < (3, 5):
     pip_message = 'This may be due to an out of date pip. Make sure you have pip >= 9.0.1.'
     try:
         import pip
-        pip_version = tuple(int(x) for x in pip.__version__.split('.')[:3])
-        if pip_version < (9, 0, 1):
-            pip_message = 'Your pip version is out of date, please install pip >= 9.0.1. '\
+        pip_v = tuple(int(x) for x in pip.__version__.split('.')[:3])
+        if pip_v < (9, 0, 1):
+            pip_message = 'Your pip version is out of date please install pip >= 9.0.1. '\
             'pip {} detected.'.format(pip.__version__)
         else:
             # pip is new enough - it must be something else
@@ -37,12 +38,12 @@ When using Python 3.4 or earlier (including 2.7), please install Notebook 5.x.
 
 Python {py} detected.
 {pip}
-""".format(py=sys.version_info, pip=pip_message )
+""".format(pip=pip_message, py=sys.version_info)
 
     print(error, file=sys.stderr)
     sys.exit(1)
 
-# At least we're on the python version we need, move on.
+# At least we're on the python version we need then move on.
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
@@ -153,9 +154,10 @@ setup_args['cmdclass'] = {
     'backendtranslations': CompileBackendTranslation,
     'js' : CompileJS,
     'jsdeps' : Bower,
-    'jsversion' : JavascriptVersion,
     'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
 }
+
+setup_args['cmdclass']['jsversion'] = JavascriptVersion
 
 try:
     from wheel.bdist_wheel import bdist_wheel
