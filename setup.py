@@ -2,6 +2,7 @@
 """Setup script for Jupyter Notebook"""
 
 
+
 #-----------------------------------------------------------------------------
 #  Copyright (c) 2015-, Jupyter Development Team.
 #  Copyright (c) 2008-2015, IPython Development Team.
@@ -23,8 +24,8 @@ if v[:2] < (3, 5):
         import pip
         pip_v = tuple(int(x) for x in pip.__version__.split('.')[:3])
         if pip_v < (9, 0, 1):
-            pip_message = 'Your pip version is out of date please install pip >= 9.0.1. '\
-            'pip {} detected.'.format(pip.__version__)
+            pip_message = f'Your pip version is out of date please install pip >= 9.0.1. pip {pip.__version__} detected.'
+
         else:
             # pip is new enough - it must be something else
             pip_message = ''
@@ -146,18 +147,17 @@ class bdist_egg_disabled(bdist_egg):
         sys.exit("Aborting implicit building of eggs. Use `pip install .` to install from source.")
 
 setup_args['cmdclass'] = {
-    'build_py': css_js_prerelease(
-            check_package_data_first(build_py)),
-    'sdist' : css_js_prerelease(sdist, strict=True),
+    'build_py': css_js_prerelease(check_package_data_first(build_py)),
+    'sdist': css_js_prerelease(sdist, strict=True),
     'develop': css_js_prerelease(develop),
-    'css' : CompileCSS,
+    'css': CompileCSS,
     'backendtranslations': CompileBackendTranslation,
-    'js' : CompileJS,
-    'jsdeps' : Bower,
+    'js': CompileJS,
+    'jsdeps': Bower,
     'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
+    'jsversion': JavascriptVersion,
 }
 
-setup_args['cmdclass']['jsversion'] = JavascriptVersion
 
 try:
     from wheel.bdist_wheel import bdist_wheel
