@@ -99,12 +99,12 @@ for more information.
         'tornado>=5.0',
         # pyzmq>=17 is not technically necessary,
         # but hopefully avoids incompatibilities with Tornado 5. April 2018
-        'pyzmq>=17',
+        'pyzmq==22.0.2',
         'argon2-cffi',
         'ipython_genutils',
         'traitlets>=4.2.1',
         'jupyter_core>=4.6.1',
-        'jupyter_client>=5.3.4',
+        'jupyter_client==7.2.0',
         'nbformat',
         'nbconvert',
         'ipykernel', # bless IPython kernel for now
