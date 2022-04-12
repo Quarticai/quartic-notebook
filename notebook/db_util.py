@@ -47,7 +47,9 @@ settings.configure(
         'django.contrib.messages',
         'django.contrib.staticfiles',
         'django_celery_results',
-    ])
+    ],
+    DISK_CACHE_DIR = '/quartic/diskcache/'
+    )
 
 django.setup()
 
